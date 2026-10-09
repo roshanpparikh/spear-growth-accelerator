@@ -325,3 +325,9 @@ svg.anim.in .fade{opacity:1;transition:opacity .6s ease 1.1s}
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+/* v3 calculator options */
+.chipset button{padding:8px 6px;font-size:.88rem;line-height:1.15}
+.chipset button.typ{flex:1.6}
+.chipset button small{display:block;font-size:.7rem;font-weight:600;opacity:.85;margin-top:2px}
+.calc-note b{color:var(--ink)}
+@media (max-width:560px){.chipset{gap:6px}.chipset button{font-size:.8rem;padding:8px 4px}.chipset button.typ{flex:1.8}}

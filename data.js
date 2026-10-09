@@ -37,9 +37,10 @@ window.SP_DATA = {
     { id: "burns", q: "Facially Generated Treatment Planning has totally transformed my practice.", who: "Dr. Jill Burns", org: "West Main Family Dental, Indiana", src: "https://www.speareducation.com/", for: ["owner", "associate"] }
   ],
   // Official Spear YouTube channel (linked from speareducation.com), "Member Testimonials" playlist. Verified Oct 9, 2026.
-  video: { id: "XcwDy82VshA", title: "Dr. Bob Conte's Testimonial, Reach Your Practice Growth Goals", who: "Dr. Bob Conte", org: "Westshore Dental Associates", published: "April 1, 2023", product: "Spear Practice Solutions (SPS)",
-    desc: "After focusing on just a few key areas of the practice, Dr. Conte saw a solid 20% growth in his first year with SPS.",
-    url: "https://www.youtube.com/watch?v=XcwDy82VshA", channel: "https://www.youtube.com/user/SpearEducation", playlist: "https://www.youtube.com/playlist?list=PLqWVYpoCgxcegN2TdL0I_K_IKySrmIPNj", thumb: "assets/people/video-conte-thumb.jpg" },
+  video: { id: "RlId6JVMNFk", title: "Unlock the Power of Focused Treatment Planning: A Testimonial by Dr. Rachel Day, D.D.S.", who: "Dr. Rachel Day, DDS", published: "December 14, 2023",
+    about: "Dr. Rachel Day, DDS, on the Treatment Planning with Confidence hands-on workshop at Spear's Scottsdale campus. It is the same workshop that anchors most plans built here.",
+    desc: "Despite the rigors, Dr. Day describes her visits to Spear’s Scottsdale campus as rejuvenating vacations, emphasizing the indispensable resource the workshop has become for overcoming common challenges in treatment planning.",
+    url: "https://www.youtube.com/watch?v=RlId6JVMNFk", channel: "https://www.youtube.com/user/SpearEducation", playlist: "https://www.youtube.com/playlist?list=PLqWVYpoCgxcegN2TdL0I_K_IKySrmIPNj", thumb: "assets/people/video-day-thumb.jpg" },
   // Real, verifiable facts used on the landing page
   facts: [
     { k: "700+", v: "Study Clubs" },

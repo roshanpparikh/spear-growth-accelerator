@@ -119,10 +119,18 @@ function landing() {
   ${videoSection()}`;
   bindCalc(); bindVideo();
   app.querySelectorAll("[data-role]").forEach(b => b.onclick = () => { S = Object.assign(fresh(), { role: b.dataset.role, roleVia: "card" }); S.showDso = S.role === "dso"; if (S.role === "early" && !S.years) S.years = "0-2"; save(); go("#/step/1"); });
-  $("#demo").onclick = () => { S = Object.assign(fresh(), { role:"owner", metric:"day", value:"6000", days:4, hygShare:0.3, target:7200, years:"6-10", love:["cos","tp"], master:["imp","tp","clr"], pace:1, block:4, roleVia:"card" }); save(); go("#/building"); };
+  $("#demo").onclick = () => { S = Object.assign(fresh(), TYPICAL, { value:"6000", target:7200, roleVia:"card" }); save(); go("#/building"); };
 }
 /* ---------- hero calculator ---------- */
-const CALC = { v: 6000, g: 0.10 };
+// Default owner profile: the same profile as "See a sample growth plan". The "Typical plan" option runs the real model on it.
+const TYPICAL = { role:"owner", metric:"day", days:4, hygShare:0.3, years:"6-10", love:["cos","tp"], master:["imp","tp","clr"], pace:1, block:4 };
+const CALC = { v: 6000, g: "typ" };
+function typicalRun(v){
+  const saved = S;
+  try { S = Object.assign(fresh(), TYPICAL, { value: String(v), target: v*1.2 }); const R = project(); let c = 0; R.months.forEach(x => c += x.prod);
+    return { lift: R.last.lift, perYear: (R.last.daily - v)*S.days*S.A.weeks, cum: c, daily: R.last.daily, H: R.plan.H }; }
+  finally { S = saved; }
+}
 function calcCard(){
   return `<div class="calc" id="calc" aria-label="Quick growth check">
     <div class="calc-h"><b>Quick growth check</b><span class="tag tag-assume">Illustrative</span></div>
@@ -130,27 +138,46 @@ function calcCard(){
     <div class="calc-v" id="calcV">${money(CALC.v)}<small>/day</small></div>
     <input id="calcR" class="range" type="range" min="2000" max="15000" step="250" value="${CALC.v}" aria-label="Production per day">
     <div class="calc-scale"><span>$2K</span><span>$15K</span></div>
-    <div class="calc-l">Growth you want</div>
-    <div class="chipset" role="radiogroup" aria-label="Growth percent">${[0.05,0.10,0.15].map(g=>`<button role="radio" aria-checked="${g===CALC.g}" class="${g===CALC.g?"on":""}" data-g="${g}">+${Math.round(g*100)}%</button>`).join("")}</div>
-    <div class="calc-out"><div><b id="calcY"></b><span>a year</span></div><div><b id="calcM"></b><span>a month</span></div></div>
-    <p class="calc-note">Added production at 4 days a week, 48 weeks a year. The growth % is your goal, not a Spear result.</p>
+    <div class="calc-l">Growth</div>
+    <div class="chipset" role="radiogroup" aria-label="Growth option">
+      <button role="radio" data-g="0.05">+5% goal</button><button role="radio" data-g="0.1">+10% goal</button><button role="radio" class="typ" data-g="typ">Typical plan<small id="calcTypPct"></small></button></div>
+    <div class="calc-out"><div><b id="calcY"></b><span id="calcYl"></span></div><div><b id="calcM"></b><span id="calcMl"></span></div></div>
+    <p class="calc-note" id="calcNote"></p>
     <button class="btn btn-orange calc-go" id="calcGo">Build my growth plan</button>
   </div>`;
 }
 function bindCalc(){
-  const days = 4, weeks = D.defaults.weeks;
-  const upd = () => { const yr = CALC.v*CALC.g*days*weeks; $("#calcV").innerHTML = money(CALC.v)+"<small>/day</small>"; $("#calcY").textContent = "+"+money(yr); $("#calcM").textContent = "+"+money(yr/12); };
+  const days = TYPICAL.days, weeks = D.defaults.weeks;
+  const upd = () => {
+    const T = typicalRun(CALC.v);
+    $("#calcV").innerHTML = money(CALC.v)+"<small>/day</small>";
+    $("#calcTypPct").textContent = "+"+pct(T.lift)+" by month "+T.H;
+    app.querySelectorAll("[data-g]").forEach(x => { const on = x.dataset.g === String(CALC.g); x.classList.toggle("on", on); x.setAttribute("aria-checked", on); });
+    if (CALC.g === "typ") {
+      $("#calcY").textContent = "+"+money(T.perYear); $("#calcYl").textContent = "a year by month "+T.H;
+      $("#calcM").textContent = "+"+money(T.cum); $("#calcMl").textContent = "added over "+T.H+" months";
+      $("#calcNote").innerHTML = `<b>Typical plan (illustrative): +${pct(T.lift)} by month ${T.H}.</b> Computed live from the same model and default assumptions as the plan page, for a practice owner 4 days a week adding implants, treatment planning and clear aligners. Growth builds over ${T.H} months as workshops ramp in. It is not instant.`;
+    } else {
+      const g = +CALC.g, tgt = Math.round(CALC.v*(1+g)/50)*50, yr = (tgt - CALC.v)*days*weeks;
+      $("#calcY").textContent = "+"+money(yr); $("#calcYl").textContent = "a year once you reach it";
+      $("#calcM").textContent = "+"+money(yr/12); $("#calcMl").textContent = "a month at that level";
+      $("#calcNote").innerHTML = `<b>A goal, not a projection.</b> At 4 days a week, 48 weeks a year. Your plan page shows whether and when the model gets you to +${Math.round(g*100)}% within ${T.H} months. The typical plan projects +${pct(T.lift)} by month ${T.H}.`;
+    }
+  };
   $("#calcR").oninput = e => { CALC.v = +e.target.value; upd(); };
-  app.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { CALC.g = +b.dataset.g; app.querySelectorAll("[data-g]").forEach(x => { x.classList.toggle("on", x===b); x.setAttribute("aria-checked", x===b); }); upd(); });
-  $("#calcGo").onclick = () => { S = Object.assign(fresh(), { metric:"day", value: String(CALC.v), days, target: Math.round(CALC.v*(1+CALC.g)/50)*50, roleVia:"calc" }); save(); go("#/step/1"); };
+  app.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { CALC.g = b.dataset.g === "typ" ? "typ" : +b.dataset.g; upd(); });
+  $("#calcGo").onclick = () => {
+    const T = typicalRun(CALC.v);
+    const target = CALC.g === "typ" ? Math.floor(T.daily/50)*50 : Math.round(CALC.v*(1+CALC.g)/50)*50;
+    S = Object.assign(fresh(), { metric:"day", value: String(CALC.v), days, target, roleVia:"calc" }); save(); go("#/step/1"); };
   upd();
 }
 /* ---------- video testimonial ---------- */
 function videoSection(){
   const v = D.video;
   return `<section class="section video-sec" id="video"><div class="wrap"><div class="vgrid">
-    <div><span class="eyebrow" style="color:var(--blue)">Member story on video</span><h2>Hear it from a Spear member</h2>
-      <p class="muted">${esc(v.who)}, ${esc(v.org)}, on growing his practice with ${esc(v.product)}.</p>
+    <div><span class="eyebrow" style="color:var(--blue)">Member story on video</span><h2>Inside a Spear workshop, from a member</h2>
+      <p class="muted">${esc(v.about)}</p>
       <blockquote class="vquote">“${esc(v.desc)}”</blockquote>
       <p class="vsrc"><span class="tag tag-real">Official Spear video</span> Quote from the video description on <a href="${v.channel}" target="_blank" rel="noopener">Spear Education's YouTube channel</a> (<a href="${v.playlist}" target="_blank" rel="noopener">Member Testimonials</a> playlist), published ${esc(v.published)}. <a href="${v.url}" target="_blank" rel="noopener">Watch on YouTube</a>.</p></div>
     <div class="vframe" id="vframe"><button class="vplay" id="vplay" aria-label="Play video: ${esc(v.title)}"><img src="${v.thumb}" alt="" width="960" height="540" loading="lazy"><span class="vbtn" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><path d="M8 5v14l11-7z" fill="#fff"/></svg></span><span class="vcap">${esc(v.title)} · Spear Education</span></button></div>
@@ -448,7 +475,7 @@ function planPage(){
   <section class="planhero"><div class="wrap">
     ${growthMotif("plan")}<span class="eyebrow">${isDso()?"Spear Growth Accelerator · per associate · group roll-up below":"Your Spear Growth Accelerator plan"}</span>
     <h1>Your first gain in <mark>month ${R.firstGain||"-"}</mark>. ${R.payback?`Paid back by <mark>month ${R.payback}</mark>.`:`Paid back <mark>after month ${R.plan.H}</mark> at these assumptions.`}</h1>
-    <p style="color:#d8defa;max-width:780px">Projected growth: +${pct(R.y1.lift)} by month 12 and +${pct(R.last.lift)} by month ${R.plan.H}. ${R.hit ? `You reach your ${money(S.target)}/day goal in month ${R.hit}.` : `That is short of your ${money(S.target)}/day goal.`} ${R.plan.items.length} hands-on workshops in ${R.plan.B}-month blocks, online courses between trips${t.t.studyClubs?", and a study club to make it stick":""}. Every month comes from your inputs and <a href="#" data-open style="color:var(--mint)">illustrative assumptions you can edit</a>.</p>
+    <p style="color:#d8defa;max-width:780px">Projected growth: +${pct(R.y1.lift)} by month 12 and +${pct(R.last.lift)} by month ${R.plan.H}, worth <span id="runRate">+${money((R.last.daily-d)*S.days*S.A.weeks)}</span> a year at that level. ${R.hit ? `You reach your ${money(S.target)}/day goal in month ${R.hit}.` : `That is short of your ${money(S.target)}/day goal.`} ${R.plan.items.length} hands-on workshops in ${R.plan.B}-month blocks, online courses between trips${t.t.studyClubs?", and a study club to make it stick":""}. Every month comes from your inputs and <a href="#" data-open style="color:var(--mint)">illustrative assumptions you can edit</a>.</p>
     <div class="chips">${SHARED?`<span class="chip chip-shared">Shared prescription</span>`:""}<span class="chip">${ROLE[S.role]}</span><span class="chip">Baseline ${money(d)}/day</span><span class="chip">Goal ${money(S.target)}/day (+${pct(R.targetLift)})</span><span class="chip">${S.days} days/wk</span><span class="chip">Adding: ${S.master.map(i=>AREA[i].label).join(", ")}</span></div>
   </div></section>
   <div class="wrap">
