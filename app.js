@@ -23,7 +23,7 @@ const fresh = () => ({
   role: null, metric: "day", value: "", hours: 8, days: 4, hygShare: 0.3, target: null,
   years: null, love: [], master: [], pace: 1, block: 4,
   dso: { doctors: D.defaults.dsoDoctors, locations: D.defaults.dsoLocations, adoption: D.defaults.dsoAdoption },
-  showDso: false,
+  showDso: false, roleVia: null, vsNothing: true,
   A: Object.assign({}, D.defaults, { lifts: Object.fromEntries(D.areas.map(a => [a.id, a.lift])), hygLift: 0.06, foundationsLift: 0.05, capstoneLift: 0.02, secondWsShare: 0.5 })
 });
 let S = fresh();
@@ -48,11 +48,17 @@ const isEarly = () => S.role === "early" || S.years === "0-2" || S.years === "3-
 const isDso = () => S.role === "dso";
 const ROLE = { owner: "Practice owner", associate: "Associate", early: "Early-career dentist", dso: "DSO leader" };
 
+const initials = n => n.replace(/^Dr\.?\s+/,"").split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join("").toUpperCase();
+function avatar(t, big){
+  return t.photo ? `<img class="av ${big?"av-lg":""}" src="${t.photo}" alt="${esc(t.who)}, photo from speareducation.com" width="120" height="120" loading="lazy">`
+    : `<span class="av av-init ${big?"av-lg":""}" aria-hidden="true">${esc(initials(t.who))}</span>`;
+}
+const shortSrc = u => /success-stories\//.test(u) ? "speareducation.com success story" : u.replace("https://www.","").replace(/\/$/,"");
 function tcard(t, cls="") {
   return `<figure class="tcard ${cls}"><span class="tag tag-real">Verbatim from speareducation.com</span>
     <blockquote>“${esc(t.q)}”</blockquote>
-    <figcaption><div class="who">${esc(t.who)}</div><div class="org">${esc(t.org)}</div>
-    <div class="src">Source: <a href="${t.src}" target="_blank" rel="noopener">${t.src.replace("https://www.","")}</a></div></figcaption></figure>`;
+    <figcaption><div class="person">${avatar(t)}<div><div class="who">${esc(t.who)}</div><div class="org">${esc(t.org)}</div></div></div>
+    <div class="src">Source${t.photo?" (quote and photo)":""}: <a href="${t.src}" target="_blank" rel="noopener">${shortSrc(t.src)}</a></div></figcaption></figure>`;
 }
 function phcard(label="Example testimonial") {
   return `<figure class="tcard ph"><span class="tag tag-ph">${label}: placeholder</span>
@@ -60,8 +66,8 @@ function phcard(label="Example testimonial") {
     <figcaption><div class="who">[Name, credential]</div><div class="org">[Practice or DSO, state] · [verified % lift, months]</div></figcaption></figure>`;
 }
 function bigquote(t) {
-  return `<div class="bigquote"><blockquote>${esc(t.q)}</blockquote><div class="who">${esc(t.who)}</div><div class="org">${esc(t.org)}</div>
-    <div class="src">Verbatim from <a href="${t.src}" target="_blank" rel="noopener">${t.src.replace("https://www.","")}</a></div></div>`;
+  return `<div class="bigquote"><blockquote>${esc(t.q)}</blockquote><div class="person">${avatar(t,true)}<div><div class="who">${esc(t.who)}</div><div class="org">${esc(t.org)}</div></div></div>
+    <div class="src">Verbatim${t.photo?" quote and photo":""} from <a href="${t.src}" target="_blank" rel="noopener">${shortSrc(t.src)}</a></div></div>`;
 }
 const T = id => D.testimonials.find(t => t.id === id);
 const roleQuote = () => ({ owner: T("nelson"), associate: T("schuler"), early: T("nguyen"), dso: T("ponzio") }[S.role] || T("nelson"));
@@ -69,7 +75,7 @@ const roleQuote = () => ({ owner: T("nelson"), associate: T("schuler"), early: T
 /* ---------- growth motif ---------- */
 function growthMotif(where){
   // Subtle accelerating growth curve: Spear blue to cyan to mint.
-  const cls = where==="loader" ? "vm vm-loader" : where==="plan" ? "vm vm-plan" : "vm";
+  const cls = where==="loader" ? "vm vm-loader" : where==="plan" ? "vm vm-plan" : where==="hero" ? "vm vm-hero" : "vm";
   const pts=[...Array(41)].map((_,i)=>{const x=i/40; return [x*1000, 300-Math.pow(x,2.2)*270];});
   const path="M"+pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L");
   const dots=[0.35,0.55,0.72,0.86,0.97].map((x,i)=>`<circle cx="${x*1000}" cy="${300-Math.pow(x,2.2)*270}" r="${3+i*1.4}" fill="url(#vmg)" opacity="${0.45+i*0.12}"/>`).join("");
@@ -82,10 +88,11 @@ function landing() {
   document.title = "Spear Growth Accelerator | See your growth and when Spear pays for itself (concept)";
   app.innerHTML = `
   <section class="hero"><div class="wrap">
-    ${growthMotif()}
+    <div class="hero-top"><div class="hero-copy">
     <span class="eyebrow">Spear Growth Accelerator</span>
     <h1>See your growth. Know when Spear <mark>pays for itself.</mark></h1>
     <p class="lead">Tell us your production and the skills you want to add. We build a sequenced plan of Spear workshops, online courses and study clubs, then show the growth you can expect, the month your first gain shows up, and the month your gains have paid for the courses. After that, it is house money.</p>
+    </div><div class="hero-side">${growthMotif("hero")}${calcCard()}</div></div>
     <p style="color:#fff;font-weight:600;margin-top:28px">Get your growth plan in about 3 minutes. Which best describes you?</p>
     <div class="role-grid">
       ${[["owner","◆","Practice owner","Grow production across your chair and your team"],
@@ -108,16 +115,62 @@ function landing() {
     <h2>Dentists on Spear, in their words</h2><p class="muted" style="margin-top:-6px;margin-bottom:22px">Verbatim from speareducation.com, with sources.</p>
     <div class="tgrid">${[T("nelson"),T("schuler"),T("ponzio")].map(t=>tcard(t)).join("")}</div>
     <p class="center" style="margin-top:28px"><button class="btn btn-line" id="demo">See a sample growth plan</button></p>
-  </div></section>`;
-  app.querySelectorAll("[data-role]").forEach(b => b.onclick = () => { S = Object.assign(fresh(), { role: b.dataset.role }); S.showDso = S.role === "dso"; if (S.role === "early" && !S.years) S.years = "0-2"; save(); go("#/step/1"); });
-  $("#demo").onclick = () => { S = Object.assign(fresh(), { role:"owner", metric:"day", value:"6000", days:4, hygShare:0.3, target:7200, years:"6-10", love:["cos","tp"], master:["imp","tp","clr"], pace:1, block:4 }); save(); go("#/building"); };
+  </div></section>
+  ${videoSection()}`;
+  bindCalc(); bindVideo();
+  app.querySelectorAll("[data-role]").forEach(b => b.onclick = () => { S = Object.assign(fresh(), { role: b.dataset.role, roleVia: "card" }); S.showDso = S.role === "dso"; if (S.role === "early" && !S.years) S.years = "0-2"; save(); go("#/step/1"); });
+  $("#demo").onclick = () => { S = Object.assign(fresh(), { role:"owner", metric:"day", value:"6000", days:4, hygShare:0.3, target:7200, years:"6-10", love:["cos","tp"], master:["imp","tp","clr"], pace:1, block:4, roleVia:"card" }); save(); go("#/building"); };
+}
+/* ---------- hero calculator ---------- */
+const CALC = { v: 6000, g: 0.10 };
+function calcCard(){
+  return `<div class="calc" id="calc" aria-label="Quick growth check">
+    <div class="calc-h"><b>Quick growth check</b><span class="tag tag-assume">Illustrative</span></div>
+    <label for="calcR" class="calc-l">Your production per day</label>
+    <div class="calc-v" id="calcV">${money(CALC.v)}<small>/day</small></div>
+    <input id="calcR" class="range" type="range" min="2000" max="15000" step="250" value="${CALC.v}" aria-label="Production per day">
+    <div class="calc-scale"><span>$2K</span><span>$15K</span></div>
+    <div class="calc-l">Growth you want</div>
+    <div class="chipset" role="radiogroup" aria-label="Growth percent">${[0.05,0.10,0.15].map(g=>`<button role="radio" aria-checked="${g===CALC.g}" class="${g===CALC.g?"on":""}" data-g="${g}">+${Math.round(g*100)}%</button>`).join("")}</div>
+    <div class="calc-out"><div><b id="calcY"></b><span>a year</span></div><div><b id="calcM"></b><span>a month</span></div></div>
+    <p class="calc-note">Added production at 4 days a week, 48 weeks a year. The growth % is your goal, not a Spear result.</p>
+    <button class="btn btn-orange calc-go" id="calcGo">Build my growth plan</button>
+  </div>`;
+}
+function bindCalc(){
+  const days = 4, weeks = D.defaults.weeks;
+  const upd = () => { const yr = CALC.v*CALC.g*days*weeks; $("#calcV").innerHTML = money(CALC.v)+"<small>/day</small>"; $("#calcY").textContent = "+"+money(yr); $("#calcM").textContent = "+"+money(yr/12); };
+  $("#calcR").oninput = e => { CALC.v = +e.target.value; upd(); };
+  app.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { CALC.g = +b.dataset.g; app.querySelectorAll("[data-g]").forEach(x => { x.classList.toggle("on", x===b); x.setAttribute("aria-checked", x===b); }); upd(); });
+  $("#calcGo").onclick = () => { S = Object.assign(fresh(), { metric:"day", value: String(CALC.v), days, target: Math.round(CALC.v*(1+CALC.g)/50)*50, roleVia:"calc" }); save(); go("#/step/1"); };
+  upd();
+}
+/* ---------- video testimonial ---------- */
+function videoSection(){
+  const v = D.video;
+  return `<section class="section video-sec" id="video"><div class="wrap"><div class="vgrid">
+    <div><span class="eyebrow" style="color:var(--blue)">Member story on video</span><h2>Hear it from a Spear member</h2>
+      <p class="muted">${esc(v.who)}, ${esc(v.org)}, on growing his practice with ${esc(v.product)}.</p>
+      <blockquote class="vquote">“${esc(v.desc)}”</blockquote>
+      <p class="vsrc"><span class="tag tag-real">Official Spear video</span> Quote from the video description on <a href="${v.channel}" target="_blank" rel="noopener">Spear Education's YouTube channel</a> (<a href="${v.playlist}" target="_blank" rel="noopener">Member Testimonials</a> playlist), published ${esc(v.published)}. <a href="${v.url}" target="_blank" rel="noopener">Watch on YouTube</a>.</p></div>
+    <div class="vframe" id="vframe"><button class="vplay" id="vplay" aria-label="Play video: ${esc(v.title)}"><img src="${v.thumb}" alt="" width="960" height="540" loading="lazy"><span class="vbtn" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><path d="M8 5v14l11-7z" fill="#fff"/></svg></span><span class="vcap">${esc(v.title)} · Spear Education</span></button></div>
+  </div></div></section>`;
+}
+function bindVideo(){
+  const b = $("#vplay"); if (!b) return;
+  b.onclick = () => { const v = D.video; $("#vframe").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>`; };
 }
 
 /* ---------- steps ---------- */
 const SECTIONS = ["Baseline","Goal","Growth areas","Your plan"];
 const STEPS = [
+  { id:"role", sec:0, auto:true, skipIf:()=> S.roleVia === "card", render(){
+      return `<div class="q"><h2>Which best describes you?</h2><p class="sub">${parseFloat(S.value)>0?`We kept your ${money(daily())}/day from the quick check. `:""}This sets your first move.</p>
+      <div class="opts cols2">${Object.entries({owner:"Practice owner",associate:"Associate",early:"Early career (0-5 yrs)",dso:"DSO or group leader"}).map(([k,l])=>`<button class="opt ${S.role===k?"sel":""}" data-r="${k}">${l}<span class="chk">✓</span></button>`).join("")}</div></div>`; },
+    bind(){ app.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { S.role = b.dataset.r; S.showDso = S.role==="dso"; if (S.role==="early" && !S.years) S.years="0-2"; save(); pick(b); }); },
+    valid:()=> !!S.role },
   { id:"proof", sec:0, inter:true, render(){
-      const t = roleQuote();
+      const t = roleQuote(); if (!S.role) return "";
       const head = { owner:"Growth on purpose beats growth by accident.", associate:"Learn in the right order. Grow faster.", early:"Your first five years set your growth curve.", dso:"Faster associate ramp is growth you can measure." }[S.role] || "Let's map your growth.";
       return `<div class="inter"><span class="eyebrow" style="color:var(--blue)">${esc(ROLE[S.role]||"")}</span><h2>${head}</h2>
         <p class="sub muted">About 3 minutes. No email. Nothing leaves this page.</p></div>${bigquote(t)}`; },
@@ -225,7 +278,7 @@ function miniCurve(){
     <text x="30" y="${h-8}" font-size="12" fill="#8a90a8">Today</text><text x="${w-20}" y="${h-8}" text-anchor="end" font-size="12" fill="#8a90a8">12 months</text></svg>`;
 }
 function stepView(n) {
-  const vs = visible(); if (!S.role) { go("#/"); return; }
+  const vs = visible(); if (!S.role && n > 1) { go("#/step/1"); return; }
   cur = Math.max(0, Math.min(n-1, vs.length-1)); const st = vs[cur];
   const secCount = SECTIONS.map((_,i)=>vs.filter(s=>s.sec===i).length);
   const secDone = SECTIONS.map((_,i)=>{ const idx=vs.filter(s=>s.sec===i); const pos=idx.indexOf(st); return st.sec>i?1: st.sec<i?0:(pos+1)/idx.length; });
@@ -335,14 +388,14 @@ function houseChart(R, scale=1, label="per doctor"){
   const pts = k => [`${X(0)},${Y(0)}`].concat(ms.map(x=>`${X(x.m)},${Y(x[k])}`)).join(" ");
   let house = "";
   if (R.payback){ const seg = ms.filter(x=>x.m>=R.payback);
-    house = `<polygon points="${seg.map(x=>`${X(x.m)},${Y(x.cc)}`).join(" ")} ${seg.slice().reverse().map(x=>`${X(x.m)},${Y(x.cs)}`).join(" ")}" fill="rgba(39,238,196,.28)"/>`; }
+    house = `<polygon points="${seg.map(x=>`${X(x.m)},${Y(x.cc)}`).join(" ")} ${seg.slice().reverse().map(x=>`${X(x.m)},${Y(x.cs)}`).join(" ")}" fill="rgba(39,238,196,.28)" class="fade"/>`; }
   const ticks = 5, grid = [...Array(ticks+1)].map((_,i)=>{ const v=maxY*i/ticks; return `<line x1="${L}" x2="${W-Rr}" y1="${Y(v/scale)}" y2="${Y(v/scale)}" stroke="#eef0f6"/><text x="${L-8}" y="${Y(v/scale)+4}" text-anchor="end" font-size="12" fill="#8a90a8">${money(v,{short:true})}</text>`; }).join("");
   const xt = ms.filter(x=>x.m%(NARROW?6:(n>12?3:2))===0).map(x=>`<text x="${X(x.m)}" y="${Hh-14}" text-anchor="middle" font-size="12" fill="#8a90a8">M${x.m}</text>`).join("");
   const ws = R.plan.items.map(it=>`<g><circle cx="${X(it.month)}" cy="${Y(ms[it.month-1].cs)}" r="5" fill="#fff" stroke="var(--orange)" stroke-width="2.5"/></g>`).join("");
-  const pbm = R.payback ? `<line x1="${X(R.payback)}" x2="${X(R.payback)}" y1="${Tp}" y2="${Hh-Bt}" stroke="var(--green)" stroke-dasharray="5 5" stroke-width="2"/>
-    <rect x="${Math.min(X(R.payback)+8, W-230)}" y="${Tp+4}" width="214" height="46" rx="8" fill="var(--green)"/><text x="${Math.min(X(R.payback)+20, W-218)}" y="${Tp+24}" font-size="13" font-weight="700" fill="#fff">Month ${R.payback}: paid back</text><text x="${Math.min(X(R.payback)+20, W-218)}" y="${Tp+41}" font-size="12" fill="#d6fff3">House money from here</text>` : "";
-  return `<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Cumulative added contribution versus cumulative Spear spend, ${label}">
-    ${grid}${house}<polyline points="${pts("cs")}" fill="none" stroke="var(--orange)" stroke-width="3"/><polyline points="${pts("cc")}" fill="none" stroke="var(--blue)" stroke-width="3.5"/>${ws}${pbm}${xt}</svg>`;
+  const pbm = R.payback ? `<g class="pbm fade"><circle class="pulse" cx="${X(R.payback)}" cy="${Y(ms[R.payback-1].cc)}" r="7" fill="var(--green)"/><circle cx="${X(R.payback)}" cy="${Y(ms[R.payback-1].cc)}" r="6" fill="var(--green)" stroke="#fff" stroke-width="2"/><line x1="${X(R.payback)}" x2="${X(R.payback)}" y1="${Tp}" y2="${Hh-Bt}" stroke="var(--green)" stroke-dasharray="5 5" stroke-width="2"/>
+    <rect x="${Math.min(X(R.payback)+8, W-230)}" y="${Tp+4}" width="214" height="46" rx="8" fill="var(--green)"/><text x="${Math.min(X(R.payback)+20, W-218)}" y="${Tp+24}" font-size="13" font-weight="700" fill="#fff">Month ${R.payback}: paid back</text><text x="${Math.min(X(R.payback)+20, W-218)}" y="${Tp+41}" font-size="12" fill="#d6fff3">House money from here</text></g>` : "";
+  return `<svg class="chart ${motionCls()}" ${R.payback?'data-celebrate="1"':""} viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Cumulative added contribution versus cumulative Spear spend, ${label}">
+    ${grid}${house}<polyline class="draw" pathLength="1" points="${pts("cs")}" fill="none" stroke="var(--orange)" stroke-width="3"/><polyline class="draw" pathLength="1" points="${pts("cc")}" fill="none" stroke="var(--blue)" stroke-width="3.5"/><g class="fade">${ws}</g>${pbm}${xt}</svg>`;
 }
 function prodChart(R){
   const NARROW = window.innerWidth < 600; const W=NARROW?440:900, Hh=NARROW?260:300, L=NARROW?58:70, Rr=20, Tp=20, Bt=40, ms=R.months, n=ms.length, d=R.d, tgt=S.target||d;
@@ -353,12 +406,12 @@ function prodChart(R){
   const grid = [0,1,2,3,4].map(i=>{ const v=lo+(hi-lo)*i/4; return `<line x1="${L}" x2="${W-Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f6"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="#8a90a8">${money(v,{short:v>=1e4})}</text>`; }).join("");
   const xt = ms.filter(x=>x.m%(NARROW?6:(n>12?3:2))===0).map(x=>`<text x="${X(x.m)}" y="${Hh-14}" text-anchor="middle" font-size="12" fill="#8a90a8">M${x.m}</text>`).join("");
   const ws = R.plan.items.map(it=>`<line x1="${X(it.month)}" x2="${X(it.month)}" y1="${Tp}" y2="${Hh-Bt}" stroke="rgba(247,106,12,.35)" stroke-dasharray="3 4"/>`).join("");
-  return `<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Projected daily production versus today and target">
+  return `<svg class="chart ${motionCls()}" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Projected daily production versus today and target">
     <defs><linearGradient id="g1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1743d7" stop-opacity=".25"/><stop offset="1" stop-color="#1743d7" stop-opacity="0"/></linearGradient></defs>
-    ${grid}${ws}<polygon points="${area}" fill="url(#g1)"/>
+    ${grid}${ws}<polygon class="fade" points="${area}" fill="url(#g1)"/>
     <line x1="${L}" x2="${W-Rr}" y1="${Y(d)}" y2="${Y(d)}" stroke="#8a90a8" stroke-dasharray="6 6" stroke-width="2"/><text x="${W-Rr-4}" y="${Y(d)-6}" text-anchor="end" font-size="12" fill="#646366">Today ${money(d)}</text>
     <line x1="${L}" x2="${W-Rr}" y1="${Y(tgt)}" y2="${Y(tgt)}" stroke="var(--orange)" stroke-dasharray="6 6" stroke-width="2"/><text x="${L+6}" y="${Y(tgt)-6}" font-size="12" font-weight="700" fill="var(--orange)">Target ${money(tgt)}</text>
-    <polyline points="${line}" fill="none" stroke="var(--blue)" stroke-width="3.5"/>${xt}</svg>`;
+    <polyline class="draw" pathLength="1" points="${line}" fill="none" stroke="var(--blue)" stroke-width="3.5"/>${xt}</svg>`;
 }
 
 /* ---------- plan page ---------- */
@@ -396,21 +449,25 @@ function planPage(){
     ${growthMotif("plan")}<span class="eyebrow">${isDso()?"Spear Growth Accelerator · per associate · group roll-up below":"Your Spear Growth Accelerator plan"}</span>
     <h1>Your first gain in <mark>month ${R.firstGain||"-"}</mark>. ${R.payback?`Paid back by <mark>month ${R.payback}</mark>.`:`Paid back <mark>after month ${R.plan.H}</mark> at these assumptions.`}</h1>
     <p style="color:#d8defa;max-width:780px">Projected growth: +${pct(R.y1.lift)} by month 12 and +${pct(R.last.lift)} by month ${R.plan.H}. ${R.hit ? `You reach your ${money(S.target)}/day goal in month ${R.hit}.` : `That is short of your ${money(S.target)}/day goal.`} ${R.plan.items.length} hands-on workshops in ${R.plan.B}-month blocks, online courses between trips${t.t.studyClubs?", and a study club to make it stick":""}. Every month comes from your inputs and <a href="#" data-open style="color:var(--mint)">illustrative assumptions you can edit</a>.</p>
-    <div class="chips"><span class="chip">${ROLE[S.role]}</span><span class="chip">Baseline ${money(d)}/day</span><span class="chip">Goal ${money(S.target)}/day (+${pct(R.targetLift)})</span><span class="chip">${S.days} days/wk</span><span class="chip">Adding: ${S.master.map(i=>AREA[i].label).join(", ")}</span></div>
+    <div class="chips">${SHARED?`<span class="chip chip-shared">Shared prescription</span>`:""}<span class="chip">${ROLE[S.role]}</span><span class="chip">Baseline ${money(d)}/day</span><span class="chip">Goal ${money(S.target)}/day (+${pct(R.targetLift)})</span><span class="chip">${S.days} days/wk</span><span class="chip">Adding: ${S.master.map(i=>AREA[i].label).join(", ")}</span></div>
   </div></section>
   <div class="wrap">
     <div class="kpis">
-      <div class="kpi"><small>First gain</small><div class="v">Month ${R.firstGain||"-"}</div><div class="d">When added production starts</div></div>
-      <div class="kpi hl"><small>Payback month</small><div class="v">${R.payback?"Month "+R.payback:"After "+R.plan.H}</div><div class="d">Your gains have paid for the courses</div></div>
-      <div class="kpi"><small>Growth by month 12</small><div class="v">+${pct(R.y1.lift)}</div><div class="d">${money(R.y1.daily)}/day vs ${money(d)} at the start</div></div>
-      <div class="kpi"><small>House money, month ${R.plan.H}</small><div class="v">${money(R.last.cc-R.last.cs,{short:true})}</div><div class="d">Gains kept after every Spear dollar is repaid</div></div>
+      <div class="kpi"><small>First gain</small><div class="v">Month ${R.firstGain?cnt(R.firstGain,"int"):"-"}</div><div class="d">When added production starts</div></div>
+      <div class="kpi hl"><small>Payback month</small><div class="v">${R.payback?"Month "+cnt(R.payback,"int"):"After "+R.plan.H}</div><div class="d">Your gains have paid for the courses</div></div>
+      <div class="kpi"><small>Growth by month 12</small><div class="v">+${cnt(R.y1.lift,"pct")}</div><div class="d">${money(R.y1.daily)}/day vs ${money(d)} at the start</div></div>
+      <div class="kpi"><small>House money, month ${R.plan.H}</small><div class="v">${cnt(R.last.cc-R.last.cs,"money")}</div><div class="d">Gains kept after every Spear dollar is repaid</div></div>
     </div>
+    <div class="sharebar"><div><b>Your growth prescription</b><span class="muted">Share a link that rebuilds this exact plan, assumptions included, or print a one-page Rx.</span></div>
+      <div class="sb-btns"><button class="btn btn-sm" id="shareRx">${SVG('<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>').replace('width="24" height="24"','width="18" height="18"')}Share my prescription</button><button class="btn btn-sm btn-line" id="printRx">${SVG('<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>').replace('width="24" height="24"','width="18" height="18"')}Print / Save as PDF</button></div></div>
     ${!R.hit?`<div class="notice">At these assumptions you reach +${pct(R.last.lift)} by month ${R.plan.H}, short of your +${pct(R.targetLift)} goal. To accelerate, try Maximum acceleration, add a growth area, or check the assumptions.</div>`:""}
 
     <div class="panel"><div class="panel-head"><div><h2 style="margin:0">When your growth pays for the courses</h2><p class="muted" style="margin:.3em 0 0">Cumulative added contribution vs cumulative Spear spend (membership, tuition, travel${A.includeChairDays?", chair days out":""}). Where the blue line crosses the orange, Spear has paid for itself.</p></div>
       <div class="legend"><span><i style="background:var(--blue)"></i>Added contribution</span><span><i style="background:var(--orange)"></i>Spear spend</span><span><i style="background:rgba(39,238,196,.6);height:10px"></i>House money</span><span><i style="background:#fff;border:2px solid var(--orange);width:10px;height:10px;border-radius:50%"></i>Workshop</span></div></div>
       ${houseChart(R)}
       <p class="hint" style="text-align:left">Contribution = added production × ${pct(A.margin,0)} margin <span class="tag tag-assume">assumption</span>. Year 1: ${money(y1c)} contribution on ${money(y1spend)} spend, ROI ${pct(roi,0)}.</p></div>
+
+    ${nothingPanel(R)}
 
     <div class="panel"><div class="panel-head"><div><h2 style="margin:0">Your growth curve</h2><p class="muted" style="margin:.3em 0 0">Projected daily production by month vs your baseline and goal. Dotted lines mark workshops.</p></div></div>${prodChart(R)}</div>
 
@@ -446,10 +503,12 @@ function planPage(){
   <button class="btn drawer-btn" data-open>⚙ Assumptions</button>
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="Assumptions"><header><div><b>Assumptions</b><div class="muted" style="font-size:.8rem">Illustrative. Edit any value. Spear must supply real cohort data.</div></div><button class="btn btn-sm" id="closeD">Done</button></header><div class="body">${drawerHtml()}</div></aside>`;
+  let pr = document.getElementById("rxPrint"); if (!pr) { pr = document.createElement("div"); pr.id = "rxPrint"; document.body.appendChild(pr); }
+  pr.innerHTML = rxPrintHtml(R, blocks);
   bindPlan();
 }
-function dsoHtml(R){
-  const A=S.A, n=S.dso.doctors*S.dso.adoption, last=R.last, y1=R.y1;
+function dsoCalc(R){
+  const A=S.A, n=S.dso.doctors*S.dso.adoption;
   const fee=A.dsoProgramFee, ret=A.dsoReplacement*A.dsoRetentionLift*S.dso.doctors; // annual retention value
   const H=R.plan.H;
   const cum = R.months.map(x=>({ m:x.m, cc: x.cc*n + ret*x.m/12, cs: x.cs*n + fee }));
@@ -457,6 +516,10 @@ function dsoHtml(R){
   const y=cum[Math.min(11,H-1)], L=cum[H-1];
   const roi = (y.cc-y.cs)/y.cs;
   const Rd = Object.assign({}, R, { months: R.months.map((x,i)=>Object.assign({},x,{cc:cum[i].cc,cs:cum[i].cs})), payback: pb?pb.m:null });
+  return { n, pb, y, L, roi, Rd, H, A };
+}
+function dsoHtml(R){
+  const { n, pb, y, L, roi, Rd, H, A } = dsoCalc(R);
   return `<div class="dso-grid">
     <div class="fld"><label>Doctors</label><input data-dso="doctors" type="number" min="1" value="${S.dso.doctors}"></div>
     <div class="fld"><label>Locations</label><input data-dso="locations" type="number" min="1" value="${S.dso.locations}"></div>
@@ -465,9 +528,9 @@ function dsoHtml(R){
   </div>
   <div class="kpis" style="margin-top:16px">
     <div class="kpi"><small>Doctors in the program</small><div class="v">${Math.round(n)}</div><div class="d">${S.dso.locations} locations · ${(n/S.dso.locations).toFixed(1)} per location</div></div>
-    <div class="kpi hl"><small>Group payback</small><div class="v">${pb?"Month "+pb.m:"After "+H}</div><div class="d">When the group's gains have paid for the program</div></div>
+    <div class="kpi hl"><small>Group payback</small><div class="v">${pb?"Month "+cnt(pb.m,"int"):"After "+H}</div><div class="d">When the group's gains have paid for the program</div></div>
     <div class="kpi"><small>Year 1 ROI</small><div class="v">${pct(roi,0)}</div><div class="d">${money(y.cc,{short:true})} contribution on ${money(y.cs,{short:true})} spend</div></div>
-    <div class="kpi"><small>House money, ${H} months</small><div class="v">${money(L.cc-L.cs,{short:true})}</div><div class="d">${money((L.cc-L.cs)/S.dso.locations,{short:true})} per location</div></div>
+    <div class="kpi"><small>House money, ${H} months</small><div class="v">${cnt(L.cc-L.cs,"money")}</div><div class="d">${money((L.cc-L.cs)/S.dso.locations,{short:true})} per location</div></div>
   </div>
   ${houseChart(Rd,1,"DSO total")}
   <p class="hint" style="text-align:left">Per-doctor plan × doctors × completion rate. Enterprise pricing and the Associate Foundations Program price are not published, so per-doctor cost uses the individual plan above plus the one-time fee you enter. Retention value (replacement cost × retention lift) is off by default: add your own in Assumptions. Real proof points to cite: Select Dental (12% daily production in 3 months, 10-doctor pilot), NADG (new-clinician retention up from about 70% to 80-85%).</p>
@@ -510,6 +573,8 @@ function bindPlan(){
   app.querySelectorAll(".panel [data-b]").forEach(b=>b.onclick=()=>{ S.block=+b.dataset.b; save(); rerender(); });
   $("#dsoT").onclick=()=>{ S.showDso=!S.showDso; save(); rerender(); if(S.showDso) setTimeout(()=>$("#dsoPanel").scrollIntoView({behavior:"smooth"}),60); };
   $("#emailme").onclick=()=>toast("Prototype: no email is collected. In production this would save the plan.");
+  $("#shareRx").onclick=shareRx; $("#printRx").onclick=()=>window.print();
+  app.querySelectorAll("[data-vn]").forEach(b=>b.onclick=()=>{ S.vsNothing = b.dataset.vn==="1"; save(); rerender(); });
   const onA = e => { const el=e.target; let v=el.value;
     if (el.dataset.lift) { S.A.lifts[el.dataset.lift]=(parseFloat(v)||0)/100; }
     else if (el.dataset.a) { const k=el.dataset.a;
@@ -526,15 +591,152 @@ function rerender(keepDrawer){
   if (keepDrawer && wasOpen){ $("#drawer").classList.add("open"); $("#scrim").classList.add("on"); $("#drawer .body").scrollTop=ds; }
 }
 
+/* ---------- plan vs doing nothing ---------- */
+function nothingPanel(R){
+  const H=R.plan.H, A=S.A; let c=0; const cp=R.months.map(x=>c+=x.prod);
+  const gap=cp[H-1], contrib=R.last.cc, net=R.last.cc-R.last.cs, vs=S.vsNothing;
+  const NARROW = window.innerWidth < 600; const W=NARROW?440:900, Hh=NARROW?260:300, L=NARROW?54:70, Rr=20, Tp=24, Bt=40;
+  const maxY=(gap||1)*1.12, X=m=>L+m*(W-L-Rr)/H, Y=v=>Tp+(Hh-Tp-Bt)*(1-v/maxY);
+  const line=[`${X(0)},${Y(0)}`].concat(cp.map((v,i)=>`${X(i+1)},${Y(v)}`)).join(" ");
+  const grid=[0,1,2,3,4].map(i=>{const v=maxY*i/4;return `<line x1="${L}" x2="${W-Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f6"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="#8a90a8">${money(v,{short:true})}</text>`;}).join("");
+  const xt=R.months.filter(x=>x.m%(NARROW?6:3)===0).map(x=>`<text x="${X(x.m)}" y="${Hh-14}" text-anchor="middle" font-size="12" fill="#8a90a8">M${x.m}</text>`).join("");
+  const gapPoly = vs ? `<polygon class="fade" points="${X(0)},${Y(0)} ${line} ${X(H)},${Y(0)}" fill="rgba(247,106,12,.16)"/>
+      <line class="draw" pathLength="1" x1="${X(0)}" x2="${X(H)}" y1="${Y(0)}" y2="${Y(0)}" stroke="#8a90a8" stroke-width="3" stroke-dasharray="1 0"/>
+      <text class="fade" x="${L+8}" y="${Y(0)-10}" font-size="12" fill="#646366">Doing nothing: ${money(R.d)}/day, no added production</text>
+      <g class="fade"><line x1="${X(H)-2}" x2="${X(H)-2}" y1="${Y(gap)}" y2="${Y(0)}" stroke="var(--orange)" stroke-width="2" stroke-dasharray="4 4"/>
+      <rect x="${X(H)-(NARROW?150:190)}" y="${Y(gap*0.55)-18}" width="${NARROW?140:180}" height="36" rx="8" fill="var(--orange)"/><text x="${X(H)-(NARROW?80:100)}" y="${Y(gap*0.55)+5}" text-anchor="middle" font-size="${NARROW?12:13}" font-weight="700" fill="#fff">${money(gap,{short:true})} on the table</text></g>` : "";
+  const svg=`<svg class="chart ${motionCls()}" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Cumulative added production with your plan${vs?" versus doing nothing":""}">${grid}${gapPoly}<polyline class="draw" pathLength="1" points="${line}" fill="none" stroke="var(--blue)" stroke-width="3.5"/>${xt}</svg>`;
+  return `<div class="panel" id="nothingPanel"><div class="panel-head"><div><h2 style="margin:0">${vs?`Waiting ${H} months leaves <mark>${money(gap)}</mark> on the table.`:`Your plan adds <mark>${money(gap)}</mark> in production over ${H} months.`}</h2>
+      <p class="muted" style="margin:.4em 0 0">${vs?`That is the added production this plan projects over ${H} months that doing nothing gives up. After your ${pct(A.margin,0)} margin it is ${money(contrib)} in contribution, or ${money(net)} after paying for Spear.`:`Cumulative added production from month 1 to month ${H}, before margin and before Spear costs.`} <span class="tag tag-assume">Illustrative</span> Same editable model and assumptions as the rest of this plan.</p></div>
+      <div class="toggle" style="margin:0"><button data-vn="0" class="${!vs?"on":""}">Your plan</button><button data-vn="1" class="${vs?"on":""}">vs doing nothing</button></div></div>
+    <div class="legend" style="margin-top:12px"><span><i style="background:var(--blue)"></i>Cumulative added production, your plan</span>${vs?`<span><i style="background:#8a90a8"></i>Doing nothing</span><span><i style="background:rgba(247,106,12,.4);height:10px"></i>Left on the table</span>`:""}</div>
+    ${svg}</div>`;
+}
+
+/* ---------- share + print ---------- */
+const b64e = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d = str => decodeURIComponent(escape(atob(str.replace(/-/g,"+").replace(/_/g,"/"))));
+function encodeState(){
+  const f = fresh(), a = {};
+  Object.keys(f.A).forEach(k => {
+    if (k === "lifts") { const l = {}; Object.keys(f.A.lifts).forEach(id => { if (S.A.lifts[id] !== f.A.lifts[id]) l[id] = S.A.lifts[id]; }); if (Object.keys(l).length) a.lifts = l; }
+    else if (S.A[k] !== f.A[k]) a[k] = S.A[k];
+  });
+  return b64e(JSON.stringify({ v:1, r:S.role, me:S.metric, va:S.value, h:S.hours, d:S.days, hy:S.hygShare, t:S.target, y:S.years, l:S.love, ma:S.master, p:S.pace, b:S.block,
+    ds:[S.dso.doctors, S.dso.locations, S.dso.adoption], sd:S.showDso?1:0, vn:S.vsNothing?1:0, a }));
+}
+function applyShare(code){
+  try {
+    const o = JSON.parse(b64d(code)); if (!o || o.v !== 1 || !ROLE[o.r]) return false;
+    const f = fresh(), num = (v, dflt) => { const n = parseFloat(v); return isFinite(n) ? n : dflt; };
+    const ids = arr => Array.isArray(arr) ? arr.filter(id => AREA[id]).slice(0, 9) : [];
+    const n = Object.assign(f, { role:o.r, roleVia:"card", metric: o.me === "hour" ? "hour" : "day", value: String(num(o.va, 0)), hours: num(o.h, 8), days: num(o.d, 4),
+      hygShare: Math.min(0.5, Math.max(0, num(o.hy, 0.3))), target: num(o.t, null), years: ["0-2","3-5","6-10","11-20","20+"].includes(o.y) ? o.y : null,
+      love: ids(o.l), master: ids(o.ma).slice(0,3), pace: [0.5,1,2].includes(o.p) ? o.p : 1, block: o.b === 6 ? 6 : 4,
+      showDso: !!o.sd, vsNothing: o.vn !== 0 });
+    if (Array.isArray(o.ds)) n.dso = { doctors: Math.max(1, num(o.ds[0], 25)), locations: Math.max(1, num(o.ds[1], 10)), adoption: Math.min(1, Math.max(0, num(o.ds[2], 0.8))) };
+    const a = o.a || {};
+    Object.keys(a).forEach(k => {
+      if (k === "lifts" && a.lifts && typeof a.lifts === "object") Object.keys(a.lifts).forEach(id => { if (AREA[id]) n.A.lifts[id] = num(a.lifts[id], n.A.lifts[id]); });
+      else if (k in n.A && k !== "lifts") { const d0 = n.A[k]; n.A[k] = typeof d0 === "boolean" ? !!a[k] : typeof d0 === "number" ? num(a[k], d0) : (k === "billing" && ["monthly","annual"].includes(a[k]) ? a[k] : d0); }
+    });
+    if (!(parseFloat(n.value) > 0)) return false;
+    S = n; save(); return true;
+  } catch (e) { return false; }
+}
+const shareUrl = () => location.href.split("#")[0] + "#/rx/" + encodeState();
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  try { const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; }
+}
+async function shareRx(){
+  const url = shareUrl(); app.dataset.share = url;
+  const ok = await copyText(url);
+  if (ok) toast("Link copied. It rebuilds this exact plan, assumptions included."); else window.prompt("Copy your prescription link:", url);
+}
+function rxPrintHtml(R, blocks){
+  const t = R.tier.best, H = R.plan.H, d = R.d, last = R.last, m12 = R.y1, dso = S.showDso ? dsoCalc(R) : null;
+  const today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const wsLine = it => { const real = it.w === D.foundationsWorkshop, list = R.tier.tuition(it), net = list*(1-t.t.discount);
+    return `<tr><td>${esc(it.w.n)}<small>${it.w.d}-day workshop · month ${it.month}</small></td><td>${t.t.unlimited ? "Included" : money(net)}<small>${real ? "published price" : "placeholder list price"}${!t.t.unlimited && t.t.discount ? ", less "+pct(t.t.discount,0)+" member discount" : ""}</small></td></tr>`; };
+  return `<div class="rxp">
+    <header class="rxp-h"><img src="assets/spear-growth-accelerator-logo.png" alt="Spear Growth Accelerator" width="1505" height="495"><div class="rxp-sym"><span>&#8478;</span><div><b>Growth prescription</b><small>${esc(today)} · ${esc(ROLE[S.role])}</small></div></div></header>
+    <div class="rxp-grid">
+      <div><small>Baseline</small><b>${money(d)}/day</b><span>${S.days} days a week</span></div>
+      <div><small>Goal</small><b>${money(S.target)}/day</b><span>+${pct(R.targetLift)}</span></div>
+      <div><small>Growth areas</small><b>${S.master.map(i=>esc(AREA[i].label)).join(", ")}</b><span>Strengths: ${S.love.map(i=>esc(AREA[i].label)).join(", ")||"-"}</span></div>
+      <div><small>Membership</small><b>${esc(t.t.name)}</b><span>${money(t.t.annual)}/yr, published</span></div>
+    </div>
+    <div class="rxp-out">
+      <div><small>First gain</small><b>Month ${R.firstGain||"-"}</b></div>
+      <div class="hl"><small>Payback</small><b>${R.payback?"Month "+R.payback:"After month "+H}</b></div>
+      <div><small>Growth by month 12</small><b>+${pct(m12.lift)}</b></div>
+      <div><small>Growth by month ${H}</small><b>+${pct(last.lift)}</b></div>
+      <div><small>House money, month ${H}</small><b>${money(last.cc-last.cs,{short:true})}</b></div>
+    </div>
+    <h3>The prescription</h3>
+    ${blocks.map(b=>`<div class="rxp-b"><div class="rxp-bh"><b>Block ${b.b+1} · Months ${b.from} to ${b.to}</b><span>${b.b===0?"Launch":b.items.length?"Accelerate":"Compound"} · +${pct(R.months[b.to-1].lift)} by month ${b.to}</span></div>
+      <table>${b.b===0?`<tr><td>${esc(t.t.name)} membership<small>${esc(t.t.priceNote)}</small></td><td>${money(t.t.annual)}/yr<small>published</small></td></tr>`:""}
+      ${b.items.map(wsLine).join("")}
+      ${[...new Set(b.items.map(i=>i.area).filter(Boolean))].map(id=>`<tr><td>Spear Online: ${esc(AREA[id].label)} course series<small>start the month before the workshop</small></td><td>Included</td></tr>`).join("")}
+      ${!b.items.length?`<tr><td>Spear Online refreshers and a re-check of your numbers<small>consolidate and compound</small></td><td>Included</td></tr>`:""}
+      ${t.t.studyClubs?`<tr><td>Spear Study Club<small>monthly case reviews</small></td><td>Included</td></tr>`:""}</table></div>`).join("")}
+    <p class="rxp-tot">Projected Spear spend over ${H} months (membership, tuition, travel${S.A.includeChairDays?", chair days out":""}): <b>${money(last.cs)}</b>. Added contribution: <b>${money(last.cc)}</b>.</p>
+    ${dso?`<div class="rxp-dso"><b>Group roll-up:</b> ${Math.round(dso.n)} of ${S.dso.doctors} doctors completing the plan (${pct(S.dso.adoption,0)} completion assumption) across ${S.dso.locations} locations. Group payback ${dso.pb?"month "+dso.pb.m:"after month "+H}. House money by month ${H}: ${money(dso.L.cc-dso.L.cs,{short:true})}.</div>`:""}
+    <p class="rxp-link">Rebuild this plan: ${esc(shareUrl())}</p>
+    <p class="rxp-disc"><b>Illustrative only.</b> Concept prototype. First-gain and payback months come from your inputs and editable assumptions (uplift, ramp, margin), not Spear results. Spear must supply real cohort data before any number here is published. Membership prices and the Foundations workshop price are as published on speareducation.com on Oct 8, 2026. Other tuition is a placeholder.</p>
+  </div>`;
+}
+
+/* ---------- motion ---------- */
+const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let ANIM = false, SHARED = false, CELEBRATED = false;
+const motionCls = () => (ANIM && !REDUCED) ? "anim" : "";
+const fmtCount = (v, f) => f === "pct" ? pct(v) : f === "money" ? money(v, { short:true }) : String(Math.round(v));
+const cnt = (v, f) => `<span data-count="${v}" data-fmt="${f}">${fmtCount(v, f)}</span>`;
+function startMotion(){
+  if (REDUCED) return;
+  const io = "IntersectionObserver" in window;
+  const countUp = el => { const to = parseFloat(el.dataset.count), f = el.dataset.fmt, from = f === "int" ? 1 : 0, t0 = performance.now(), dur = 1100;
+    const step = now => { const k = Math.min(1, (now - t0)/dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtCount(from + (to - from)*e, f); if (k < 1) requestAnimationFrame(step); else el.textContent = fmtCount(to, f); };
+    requestAnimationFrame(step); };
+  const counts = [...app.querySelectorAll("[data-count]")];
+  counts.forEach(el => el.textContent = fmtCount(el.dataset.fmt === "int" ? 1 : 0, el.dataset.fmt));
+  const charts = [...app.querySelectorAll("svg.anim")];
+  const reveal = el => { if (el.matches("svg")) { el.classList.add("in"); if (el.dataset.celebrate && !CELEBRATED) { CELEBRATED = true; setTimeout(() => celebrate(el), 1450); } } else countUp(el); };
+  if (!io) { counts.concat(charts).forEach(reveal); return; }
+  const ob = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { ob.unobserve(e.target); reveal(e.target); } }), { threshold: 0.3 });
+  counts.concat(charts).forEach(el => ob.observe(el));
+}
+function celebrate(svg){
+  if (!document.body.contains(svg)) return;
+  svg.classList.add("celebrate");
+  const dot = svg.querySelector(".pulse"); if (!dot) return;
+  const r = dot.getBoundingClientRect(), ox = r.left + r.width/2, oy = r.top + r.height/2;
+  const cv = document.createElement("canvas"); cv.className = "confetti"; cv.width = innerWidth; cv.height = innerHeight; document.body.appendChild(cv);
+  const ctx = cv.getContext("2d"), cols = ["#27eec4","#07c2ff","#1743d7","#f76a0c","#2f7a4d"];
+  const ps = [...Array(70)].map(() => { const a = -Math.PI/2 + (Math.random()-.5)*Math.PI*1.1, v = 4 + Math.random()*6; return { x:ox, y:oy, vx:Math.cos(a)*v, vy:Math.sin(a)*v, s:4+Math.random()*4, c:cols[Math.random()*cols.length|0], r:Math.random()*6, vr:(Math.random()-.5)*.4 }; });
+  const t0 = performance.now();
+  const tick = now => { const k = (now - t0)/1500; ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p => { p.vy += .22; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - k); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s/2, -p.s/4, p.s, p.s/2); ctx.restore(); });
+    if (k < 1) requestAnimationFrame(tick); else cv.remove(); };
+  requestAnimationFrame(tick);
+}
+
 /* ---------- router ---------- */
 function render(){
   if (building._stop) { building._stop(); building._stop = null; }
   const h = location.hash || "#/";
   document.body.classList.toggle("in-funnel", /^#\/step/.test(h));
   let m;
+  if (!/^#\/(plan|rx\/)/.test(h)) { const pr = document.getElementById("rxPrint"); if (pr) pr.remove(); SHARED = false; }
   if ((m = h.match(/^#\/step\/(\d+)/))) stepView(+m[1]);
   else if (h === "#/building") building();
-  else if (h === "#/plan") planPage();
+  else if ((m = h.match(/^#\/rx\/([A-Za-z0-9_-]+)/))) {
+    if (applyShare(m[1])) { SHARED = true; history.replaceState(null, "", "#/plan"); CELEBRATED = false; ANIM = true; planPage(); startMotion(); ANIM = false; window.scrollTo(0,0); }
+    else { history.replaceState(null, "", "#/"); landing(); toast("That prescription link could not be read."); }
+  }
+  else if (h === "#/plan") { CELEBRATED = false; ANIM = true; planPage(); startMotion(); ANIM = false; }
   else landing();
 }
 window.addEventListener("hashchange", render);
