@@ -53,7 +53,7 @@ window.SP_DATA = {
     targets: [
       { k: "Case acceptance", v: "+15%", s: "relative lift vs baseline acceptance rate" },
       { k: "Comprehensive exams per week", v: "+25%", s: "vs the 4 weeks before the course" },
-      { k: "Production per hour", v: "+10%", s: "by day 90, vs baseline" }
+      { k: "Production per hour", v: null, calc: "m3", s: "by day 90 at $2,500 a day, vs baseline" }
     ],
     kit: [
       ["Comprehensive exam checklist", "Checklist"], ["10-minute smartphone photo series", "Checklist"], ["Chairside confidence phrases (and words to drop)", "Script"],
@@ -99,8 +99,13 @@ window.SP_DATA = {
     tuition2: 3995, tuition3: 4995, travel: 1500, includeChairDays: true,
     horizon: 24, billing: "monthly",
     dsoDoctors: 25, dsoLocations: 10, dsoAdoption: 0.8, dsoProgramFee: 0, dsoReplacement: 0, dsoRetentionLift: 0,
-    launchLift: 0.10,
+    // 2-Day Launch lift at full effect, at the $5,000/day reference (headroom scales it). Calibrated Oct 2026 so the Typical plan
+    // reaches about $1,500 to $2,000, $2,500 to $3,200 and $6,000 to $7,000 per day by month 6 (illustrative).
+    launchLift: 0.26,
+    // DSO cohort snapshot default (Launch only, one associate): set so an associate's month-6 lift at $2,500/day matches the
+    // Typical plan's month-6 headline at the same production (about +28%). Conservative vs the full doctor-only Launch lift.
+    dsoLaunchLift: 0.18,
     // Headroom effect: lower starting production means more room to grow. Multiplies every lift % (see headroom() in app.js).
-    headroom: true, headroomStrength: 1, liftCap: 0.45
+    headroom: true, headroomStrength: 1, liftCap: 0.55, modelV: 3
   }
 };

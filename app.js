@@ -38,7 +38,7 @@ const fresh = () => ({
   A: Object.assign({}, D.defaults, { lifts: Object.fromEntries(D.areas.map(a => [a.id, a.lift])), hygLift: 0.06, foundationsLift: 0.05, capstoneLift: 0.02, secondWsShare: 0.5 })
 });
 let S = fresh();
-try { const j = sessionStorage.getItem("sv_state"); if (j) S = Object.assign(fresh(), JSON.parse(j)); } catch(e){}
+try { const j = sessionStorage.getItem("sv_state"); if (j) { const o = JSON.parse(j); if (!o.A || o.A.modelV !== D.defaults.modelV) delete o.A; S = Object.assign(fresh(), o); } } catch(e){}
 const save = () => { try { sessionStorage.setItem("sv_state", JSON.stringify(S)); } catch(e){} };
 
 /* ---------- helpers ---------- */
@@ -143,7 +143,7 @@ const CALC = { v: DEFAULT_DAY, g: "typ" };
 function typicalRun(v, aOver){
   const saved = S;
   try { S = Object.assign(fresh(), TYPICAL, { value: String(v), target: v*1.2 }); if (aOver) Object.assign(S.A, aOver); const R = project(); let c = 0; R.months.forEach(x => c += x.prod);
-    return { lift: R.last.lift, perYear: (R.last.daily - v)*S.days*S.A.weeks, cum: c, daily: R.last.daily, H: R.plan.H, k: R.headroom.k, m6: R.months[5].lift, pb: R.payback }; }
+    return { lift: R.last.lift, perYear: (R.last.daily - v)*S.days*S.A.weeks, cum: c, daily: R.last.daily, H: R.plan.H, k: R.headroom.k, m6: R.months[5].lift, pb: R.payback, ms: R.months.map(x => x.lift), items: R.plan.items.map(i => [i.w.n, i.month, i.lift]) }; }
   finally { S = saved; }
 }
 function calcCard(){
@@ -172,7 +172,7 @@ function bindCalc(){
     if (CALC.g === "typ") {
       $("#calcY").textContent = "+"+money(T.perYear); $("#calcYl").textContent = "a year by month "+T.H;
       $("#calcM").textContent = "+"+money(T.cum); $("#calcMl").textContent = "added over "+T.H+" months";
-      $("#calcNote").innerHTML = `<b>Typical plan (illustrative): +${pct(T.lift)} by month ${T.H}.</b> Computed live from the same model and default assumptions as the plan page, for a practice owner 4 days a week who starts with the 2-Day Launch, then adds implants, case acceptance and clear aligners. Growth builds over ${T.H} months as workshops ramp in. It is not instant. Headroom effect at ${money(CALC.v)}/day: ${T.k.toFixed(2)}x the lift at $5,000/day, so +${pct(T.m6)} by month 6.`;
+      $("#calcNote").innerHTML = `<b>Typical plan (illustrative): +${pct(T.lift)} by month ${T.H}.</b> Computed live from the same model and default assumptions as the plan page, for a practice owner 4 days a week who starts with the 2-Day Launch, then adds implants, case acceptance and clear aligners. Growth builds over ${T.H} months as workshops ramp in. It is not instant. Headroom effect at ${money(CALC.v)}/day: ${T.k.toFixed(2)}x the lift at $5,000/day. Most of the early gain comes from the 2-Day Launch, so you reach about ${money(Math.round(CALC.v*(1+T.m6)/50)*50)}/day (+${pct(T.m6)}) by month 6, then growth keeps building more slowly.`;
     } else {
       const g = +CALC.g, tgt = Math.round(CALC.v*(1+g)/50)*50, yr = (tgt - CALC.v)*days*weeks;
       $("#calcY").textContent = "+"+money(yr); $("#calcYl").textContent = "a year once you reach it";
@@ -319,7 +319,7 @@ function flywheelSVG(){
 }
 function roadshowPage(){
   document.title = "Spear Enterprise. Relaunched. The 2027 Roadshow | Spear Growth Accelerator (concept)";
-  const E = launchEcon(S.A.launchLift);
+  const E = launchEcon(S.A.dsoLaunchLift);
   const PIL = [
     [SVG('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'), "In-market 2-Day Launch cohorts", "The flagship Launch, Foundations plus Treatment Planning with Confidence, delivered in your market to a cohort of your doctors."],
     [ICON.team, "Legendary faculty plus near-peer co-leads", "Every session is co-led: a senior Spear faculty member for the why, a near-peer co-lead for how it runs on Monday."],
@@ -449,7 +449,7 @@ function launchEcon(lift, base){
 }
 function launchPage(){
   document.title = COURSE_FULL + " | Spear Growth Accelerator (concept)";
-  if (LCALC.lift === null) LCALC.lift = S.A.launchLift;
+  if (LCALC.lift === null) LCALC.lift = S.A.dsoLaunchLift;
   let n = 0;
   const sess = d => d.sessions.map(x => { n++; return `<article class="sess"><div class="sess-h"><span class="sess-n">${n}</span><h3>${esc(x.t)}</h3></div>
       <p class="muted">${esc(x.what)}</p>
@@ -465,7 +465,7 @@ function launchPage(){
     <div class="endcta"><a class="btn btn-orange" href="#/step/1">Build my growth plan</a><button class="btn btn-ghost" data-jump="launch-dso">For DSOs: ROI and payback</button></div>
   </div></section>
   <div class="wrap">
-    <div class="kpis">${L.targets.map(x=>`<div class="kpi"><small>${esc(x.k)}</small><div class="v">${esc(x.v)}</div><div class="d">${esc(x.s)}</div></div>`).join("")}
+    <div class="kpis">${L.targets.map(x=>`<div class="kpi"><small>${esc(x.k)}</small><div class="v">${esc(x.calc ? "+"+pct(launchEcon(S.A.dsoLaunchLift, DEFAULT_DAY)[x.calc],0) : x.v)}</div><div class="d">${esc(x.s)}</div></div>`).join("")}
       <div class="kpi hl"><small>Monday-morning actions</small><div class="v">${SESS().length}</div><div class="d">One per session, done in week 1</div></div></div>
     <p class="hint" style="text-align:left;margin-top:10px"><span class="tag tag-assume">Illustrative 90-day targets</span> Shown as % lift vs each doctor's own baseline. Spear must validate with cohort data before publishing.</p>
 
@@ -499,28 +499,30 @@ function launchPage(){
   app.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => document.getElementById(b.dataset.jump).scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }));
 }
 function lcalcHtml(){
-  if (LCALC.lift === null) LCALC.lift = S.A.launchLift;
+  if (LCALC.lift === null) LCALC.lift = S.A.dsoLaunchLift;
   if (!LCALC.base) LCALC.base = DEFAULT_DAY;
   return `<div class="lcalc"><div class="lc-in">
           <label for="lcB">Avg associate production per day <b id="lcBv">${money(LCALC.base)}</b></label><input id="lcB" class="range" type="range" min="1000" max="8000" step="250" value="${LCALC.base}">
           <label for="lcC">Associates in the cohort <b id="lcCv">${LCALC.cohort}</b></label><input id="lcC" class="range" type="range" min="4" max="40" step="1" value="${LCALC.cohort}">
-          <label for="lcL">Production per hour lift at full effect <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.02" max="0.2" step="0.005" value="${LCALC.lift}">
-          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp (shorter for lower producers), ${pct(S.A.margin,0)} margin. Headroom effect from the plan page applies to the production you set. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
+          <label for="lcL">2-Day Launch lift at full effect, at $5,000 a day <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.05" max="0.4" step="0.005" value="${LCALC.lift}">
+          <p class="hint lc-eff" id="lcEff" style="text-align:left;margin:-4px 0 10px"></p>
+          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp (shorter for lower producers), ${pct(S.A.margin,0)} margin. Headroom effect from the plan page applies to the production you set. Default lift is set so an associate at $2,500 a day reaches the same month-6 % as the Typical plan on the home page. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
         <div class="lc-out" id="lcOut"></div></div>`;
 }
 function bindLcalc(){
   if (!$("#lcOut")) return;
   const out = () => { const E = launchEcon(LCALC.lift, LCALC.base), c = LCALC.cohort;
     $("#lcCv").textContent = c; $("#lcLv").textContent = pct(LCALC.lift); $("#lcBv").textContent = money(LCALC.base);
+    $("#lcEff").textContent = "Headroom effect at "+money(LCALC.base)+" a day: "+E.k.toFixed(2)+"x, so +"+pct(E.m6)+" production per hour by month 6.";
     $("#lcOut").innerHTML = `<div class="kpi lc-hero"><small>Cohort production added, first 12 months <span class="tag tag-assume">Illustrative</span></small><div class="v">+${money(E.prod12*c)}</div>
         <div class="d">${c} associates. Per associate: <b>+${money(E.prod12)}</b>. Contribution to the DSO at ${pct(S.A.margin,0)} margin: <b>+${money(E.contrib12*c)}</b>.</div>
         <div class="d lc-24">First 24 months, if gains hold: <b>+${money(E.prod24*c)}</b> production, <b>+${money(E.contrib24*c)}</b> contribution.</div></div>
       <div class="kpi hl"><small>Payback</small><div class="v">${E.pb ? "Month "+E.pb : "After 12"}</div><div class="d">Per associate, and for the cohort</div></div>
       <div class="kpi"><small>12-month ROI</small><div class="v">${pct(E.roi,0)}</div><div class="d">Contribution vs launch cost</div></div>
-      <div class="kpi"><small>Production per hour</small><div class="v">+${pct(E.m12)}</div><div class="d">by month 12 · +${pct(E.m3)} by month 3</div></div>
+      <div class="kpi"><small>Production per hour</small><div class="v">+${pct(E.m6)}</div><div class="d">by month 6 · +${pct(E.m3)} by month 3</div></div>
       <div class="kpi"><small>Time to +5%</small><div class="v">${E.five ? "Month "+E.five : "Not in 12 mo"}</div><div class="d">${c} associates on one clinical language</div></div>`; };
   $("#lcC").oninput = e => { LCALC.cohort = +e.target.value; out(); };
-  $("#lcB").oninput = e => { LCALC.base = +e.target.value; out(); const st = $("#rsPb"); if (st) { const E = launchEcon(S.A.launchLift, LCALC.base); st.textContent = E.pb ? "Month "+E.pb : "12+ mo"; } };
+  $("#lcB").oninput = e => { LCALC.base = +e.target.value; out(); const st = $("#rsPb"); if (st) { const E = launchEcon(LCALC.lift, LCALC.base); st.textContent = E.pb ? "Month "+E.pb : "12+ mo"; } };
   $("#lcL").oninput = e => { LCALC.lift = +e.target.value; out(); };
   out();
 }
@@ -677,10 +679,11 @@ function building(){
 /* ---------- model ---------- */
 /* Headroom effect (illustrative). ONE shared function used by every projection: hero calculator, plan builder,
    plan vs doing nothing, launchEcon (2-Day Launch page, roadshow hero and ROI snapshot), DSO view, share link and printable Rx.
-   Smooth monotone curve on log(baseline $/day): ~1.8x at $1,500, ~1.5x at $2,500, 1.0x at $5,000, ~0.8x at $8,000, 0.7x floor at $10K+.
-   Lower producers also ramp faster (ramp months / multiplier), so the early gap is bigger.
-   Sanity anchor: Spear's published P1 Dental story, production per hour +10% to over 40% by doctor. */
-const HR_KNOTS = [[1000,2.0],[1500,1.8],[2500,1.5],[5000,1.0],[8000,0.8],[10000,0.7]];
+   Smooth monotone curve on log(baseline $/day): ~2.2x at $1,000, ~1.95x at $1,500, ~1.6x at $2,500, ~1.2x at $4,000, 1.0x at $5,000,
+   ~0.94x at $6,000, ~0.71x floor at $10K+. Lower producers also ramp faster (ramp months / multiplier), so the early gap is bigger.
+   Calibrated (Oct 2026, Dr. Ro's targets) with launchLift 0.26: Typical plan by month 6 = $1,500 to ~$2,000, $2,500 to ~$3,200,
+   $6,000 to ~$7,000 per day. The overall cap (default 55%) applies to the combined production lift. Illustrative, not Spear data. */
+const HR_KNOTS = [[1000,2.17],[1500,1.95],[2500,1.62],[4000,1.19],[5000,1.0],[6000,0.94],[10000,0.71]];
 const HR_X = HR_KNOTS.map(k=>Math.log(k[0])), HR_Y = HR_KNOTS.map(k=>k[1]);
 const HR_T = (() => { // Fritsch-Carlson monotone cubic tangents
   const n = HR_X.length, dl = [], t = [];
@@ -700,7 +703,7 @@ function headroom(base, A){
   A = A || S.A;
   const on = A.headroom !== false, st = isFinite(A.headroomStrength) ? Math.max(0, A.headroomStrength) : 1;
   const k = on ? Math.max(0.1, 1 + st*(headroomRaw(base) - 1)) : 1, f = Math.max(1, k);
-  return { k, on, ramp: Math.max(1, A.rampMonths / f), rampOnline: Math.max(1, 2 / f), cap: isFinite(A.liftCap) && A.liftCap > 0 ? A.liftCap : 0.45 };
+  return { k, on, ramp: Math.max(1, A.rampMonths / f), rampOnline: Math.max(1, 2 / f), cap: isFinite(A.liftCap) && A.liftCap > 0 ? A.liftCap : 0.55 };
 }
 // Combined lift from a list of ramps: 1 - product(1 - lift), each ramping linearly to full effect.
 const liftAt = (rs, m) => 1 - rs.reduce((p, x) => p * (1 - (m < x.s ? 0 : x.L * Math.min(1, (m - x.s + 1) / x.r))), 1);
@@ -766,8 +769,9 @@ function project(){
   const months = [];
   let cc = 0, cs = 0;
   for (let m = 1; m <= H; m++) {
-    const dl = cappedLift(ramps, raw, m, HM), hl = cappedLift(hramps, hraw, m, HM);
-    const prod = docM*dl + hygM*hl;
+    // Overall cap applies to the combined production lift (doctor + hygiene), so it reads the same as the % shown.
+    const up = monthlyBase ? (docM*liftAt(ramps, m) + hygM*liftAt(hramps, m))/monthlyBase : 0, rw = monthlyBase ? (docM*liftAt(raw, m) + hygM*liftAt(hraw, m))/monthlyBase : 0;
+    const prod = monthlyBase*(up > rw ? Math.min(up, Math.max(HM.cap, rw)) : up);
     const contrib = prod * A.margin;
     let spend = A.billing === "annual" ? ((m - 1) % 12 === 0 ? t.annual : 0) : t.annual/12;
     plan.items.filter(it => it.month === m).forEach(it => {
@@ -963,15 +967,16 @@ function drawerHtml(){
     ${f("onlineHeadStart","Share of gain from online prep %","Starts the month before the workshop",1,100)}
     <h4>Lift at full effect, % of doctor production <span class="tag tag-assume">illustrative</span></h4>
     ${D.areas.map(a=>`<div class="fld"><label>${a.label}</label><input data-lift="${a.id}" type="number" step="0.5" value="${+(A.lifts[a.id]*100).toFixed(2)}"></div>`).join("")}
-    ${f("launchLift","2-Day Launch (step 1 in every plan)","Foundations + Treatment Planning with Confidence",0.5,100)}
+    ${f("launchLift","2-Day Launch (step 1 in every plan)","At $5,000/day. Foundations + Treatment Planning with Confidence",0.5,100)}
+    ${f("dsoLaunchLift","2-Day Launch, DSO cohort snapshot default","Launch-only economics on the 2-Day Launch and Roadshow pages",0.5,100)}
     ${f("capstoneLift","Advanced Treatment Planning capstone","",0.5,100)}
     ${f("secondWsShare","Second workshop in same area, % of first","",5,100)}
     ${f("hygLift","Hygiene lift from team training %","Applies to hygiene production",0.5,100)}
     <h4>Headroom effect <span class="tag tag-assume">illustrative</span></h4>
-    <p class="hint" style="text-align:left;margin:0 0 8px">Lower starting production means more room to grow, so % lift is higher early. At 100% strength: about 1.8x at $1,500/day, 1.5x at $2,500, 1.0x at $5,000, 0.8x at $8,000 and 0.7x at $10K+. Lower producers also reach full effect sooner. Your multiplier at ${money(daily()||DEFAULT_DAY)}/day: <b>${headroom(daily()||DEFAULT_DAY, A).k.toFixed(2)}x</b>.</p>
+    <p class="hint" style="text-align:left;margin:0 0 8px">Lower starting production means more room to grow, so % lift is higher early. At 100% strength: about 2.2x at $1,000/day, 1.95x at $1,500, 1.6x at $2,500, 1.2x at $4,000, 1.0x at $5,000, 0.94x at $6,000 and 0.7x at $10K+. Lower producers also reach full effect sooner. Your multiplier at ${money(daily()||DEFAULT_DAY)}/day: <b>${headroom(daily()||DEFAULT_DAY, A).k.toFixed(2)}x</b>.</p>
     <div class="fld"><label>Headroom effect<small>Scales every lift % by starting production</small></label><select data-a="headroom"><option value="1" ${A.headroom!==false?"selected":""}>On</option><option value="0" ${A.headroom===false?"selected":""}>Off</option></select></div>
     ${f("headroomStrength","Headroom strength %","100% = the curve above. 0% = same % lift at every baseline",10,100)}
-    ${f("liftCap","Cap on total lift with headroom %","Sanity anchor: P1 Dental +10% to over 40%",1,100)}
+    ${f("liftCap","Cap on total lift with headroom %","Applies to combined production lift. P1 Dental reported +10% to over 40% by doctor",1,100)}
     <h4>DSO <span class="tag tag-ph">placeholder</span></h4>
     ${f("dsoReplacement","Cost to replace an associate ($)","Enter yours",1000)}
     ${f("dsoRetentionLift","Retention improvement, points %","e.g. NADG reports ~70% to 80-85%",1,100)}
@@ -1160,6 +1165,6 @@ window.addEventListener("hashchange", render);
 document.addEventListener("click", e => { const a = e.target.closest && e.target.closest('a[href^="#/"]'); if (a && a.getAttribute("href") === location.hash) { e.preventDefault(); render(); } });
 document.addEventListener("keydown", e => { if (e.key === "Enter" && /#\/step/.test(location.hash) && !e.target.matches("button")) { e.preventDefault(); next(); } });
 // Read-only hook for automated checks of the shared model.
-window.SGA_MODEL = { typicalRun, headroom: (b, a) => headroom(b, Object.assign({}, fresh().A, a || {})), launchEcon: (l, b) => launchEcon(l == null ? S.A.launchLift : l, b) };
+window.SGA_MODEL = { typicalRun, headroom: (b, a) => headroom(b, Object.assign({}, fresh().A, a || {})), launchEcon: (l, b) => launchEcon(l == null ? S.A.dsoLaunchLift : l, b) };
 render();
 })();
