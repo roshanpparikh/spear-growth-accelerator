@@ -32,7 +32,7 @@ window.SP_DATA = {
   // FLAGSHIP 2-DAY LAUNCH (concept). Combines Spear Foundations (Day 1) + Treatment Planning with Confidence (Day 2).
   // Everything here is a concept for discussion. Faculty are roles, not people. Targets are illustrative.
   launch: {
-    d: 2, cat: "Flagship launch",
+    d: 2, cat: "Flagship launch", price: 4995, // target list price for the 2-Day Launch
     days: [
       { n: "Day 1", t: "See it, then say it", src: "Built on Spear Foundations", sessions: [
         { t: "The comprehensive exam", what: "A repeatable exam flow that finds what single-tooth dentistry misses.", mon: "Run the full comprehensive exam on every new patient this week, checklist in hand.", kpi: "Comprehensive exams per week" },

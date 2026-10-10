@@ -439,7 +439,7 @@ function launchEcon(lift){
   const rs = [{ s: 1 + A.lagMonths, r: A.rampMonths, L: lift*(1-A.onlineHeadStart) }, { s: 1 + A.lagMonths, r: 2, L: lift*A.onlineHeadStart }];
   const lv = m => 1 - rs.reduce((p,x)=> p*(1 - (m < x.s ? 0 : x.L*Math.min(1,(m-x.s+1)/x.r))), 1);
   const mem = D.tiers.foundations.annual/12; let cc=0, cs=0; const ms=[];
-  for (let m=1; m<=H; m++){ const l = lv(m); cc += mb*l*A.margin; cs += mem + (m===1 ? A.tuition2 + A.travel + (A.includeChairDays ? 2*base*A.margin : 0) : 0); ms.push({ m, l, cc, cs }); }
+  for (let m=1; m<=H; m++){ const l = lv(m); cc += mb*l*A.margin; cs += mem + (m===1 ? D.launch.price + A.travel + (A.includeChairDays ? 2*base*A.margin : 0) : 0); ms.push({ m, l, cc, cs }); }
   const pb = ms.find(x => x.cc >= x.cs), five = ms.find(x => x.l >= 0.05 - 1e-9);
   return { m3: ms[2].l, m6: ms[5].l, m12: ms[11].l, roi: (ms[11].cc - ms[11].cs)/ms[11].cs, pb: pb ? pb.m : null, five: five ? five.m : null };
 }
@@ -692,7 +692,7 @@ function buildPlan(){
 }
 function chooseTier(items){
   const A=S.A, years=A.horizon/12;
-  const tuition = it => it.w === D.foundationsWorkshop ? D.foundationsWorkshop.price : (it.w.d === 2 ? A.tuition2 : A.tuition3);
+  const tuition = it => it.launch ? D.launch.price : it.w === D.foundationsWorkshop ? D.foundationsWorkshop.price : (it.w.d === 2 ? A.tuition2 : A.tuition3);
   const needTeam = S.master.includes("team") || S.role === "owner" && S.hygShare > 0 && S.master.includes("team");
   let keys = isEarly() && S.role !== "owner" && S.role !== "dso" ? ["foundations","individual","practice","faculty","allaccess"] : ["individual","practice","faculty","allaccess"];
   const rows = keys.map(k => { const t = D.tiers[k];
@@ -782,7 +782,7 @@ function planPage(){
   const summitMonth = 6; // plan starts Nov 2026; April 2027 is month 6
   const rxWorkshop = it => { if (it.launch) { const list = R.tier.tuition(it), net = list*(1-t.t.discount);
       return `<div class="rxi rxi-launch"><span class="t ws launch">Step 1</span><div><div class="n">${esc(it.w.n)}</div><div class="m">2-day flagship launch · month ${it.month} · Day 1 Spear Foundations + Day 2 Treatment Planning with Confidence · ${esc(it.why)}. Monday Morning Kit and 30/60/90 cohort follow-up included. <a href="#/launch">See the 2-day agenda</a></div></div>
-      <div class="c">${t.t.unlimited ? "Included" : money(net)}<small>list ${money(list)} placeholder${!t.t.unlimited && t.t.discount ? " · "+pct(t.t.discount,0)+" member discount" : ""}</small></div></div>`; }
+      <div class="c">${t.t.unlimited ? "Included" : money(net)}<small>list ${money(list)} target price${!t.t.unlimited && t.t.discount ? " · "+pct(t.t.discount,0)+" member discount" : ""}</small></div></div>`; }
     const real = it.w === D.foundationsWorkshop; const list = R.tier.tuition(it); const net = list*(1-t.t.discount);
     return `<div class="rxi"><span class="t ws">Workshop</span><div><div class="n">${esc(it.w.n)}</div><div class="m">${it.w.d}-day ${esc(it.w.cat)} workshop · month ${it.month}${real?` · ${D.foundationsWorkshop.ce} CE`:""} · ${esc(it.why)}</div></div>
       <div class="c">${t.t.unlimited ? "Included" : money(net)}<small>${real ? "list $3,995 published" : "list "+money(list)+" placeholder"}${!t.t.unlimited && t.t.discount ? " · "+pct(t.t.discount,0)+" member discount" : ""}</small></div></div>`; };
