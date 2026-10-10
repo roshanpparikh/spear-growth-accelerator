@@ -99,6 +99,8 @@ window.SP_DATA = {
     tuition2: 3995, tuition3: 4995, travel: 1500, includeChairDays: true,
     horizon: 24, billing: "monthly",
     dsoDoctors: 25, dsoLocations: 10, dsoAdoption: 0.8, dsoProgramFee: 0, dsoReplacement: 0, dsoRetentionLift: 0,
-    launchLift: 0.10
+    launchLift: 0.10,
+    // Headroom effect: lower starting production means more room to grow. Multiplies every lift % (see headroom() in app.js).
+    headroom: true, headroomStrength: 1, liftCap: 0.45
   }
 };
