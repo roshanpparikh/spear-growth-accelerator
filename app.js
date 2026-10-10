@@ -16,6 +16,12 @@ const ICON = {
   occ: SVG('<path d="M3 9h18M3 15h18"/><path d="M6 9V6M10 9V5M14 9V5M18 9V6M6 15v3M10 15v4M14 15v4M18 15v3"/>'),
   team: SVG('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15 14.5c3 0 6 2 6 5.5"/>')
 };
+const ROLE_IC = {
+  owner: SVG('<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-6h4v6"/>'),
+  associate: SVG('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'),
+  early: SVG('<path d="M12 21v-9"/><path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6z"/><path d="M12 14c0-3-2.4-5-6-5 0 3 2.4 5 6 5z"/>'),
+  dso: SVG('<rect x="3" y="10" width="7" height="11"/><rect x="14" y="4" width="7" height="17"/><path d="M6 14h1M6 17h1M17 8h1M17 12h1M17 16h1"/>')
+};
 const AREA = Object.fromEntries(D.areas.map(a => [a.id, a]));
 /* Flagship course name: edit window.SGA_COURSE_NAME in data.js (top of file). */
 const COURSE = window.SGA_COURSE_NAME || "[Course name TBD]";
@@ -100,15 +106,16 @@ function landing() {
     </div><div class="hero-side">${growthMotif("hero")}${calcCard()}</div></div>
     <p style="color:#fff;font-weight:600;margin-top:28px">Get your growth plan in about 3 minutes. Which best describes you?</p>
     <div class="role-grid">
-      ${[["owner","◆","Practice owner","Grow production across your chair and your team"],
-         ["associate","◇","Associate","Build your schedule and your production"],
-         ["early","✧","Early career (0-5 yrs)","Build confidence and grow production sooner"],
-         ["dso","▣","DSO or group leader","Ramp associates faster across locations"]]
+      ${[["owner",ROLE_IC.owner,"Practice owner","Grow production across your chair and your team"],
+         ["associate",ROLE_IC.associate,"Associate","Build your schedule and your production"],
+         ["early",ROLE_IC.early,"Early career (0-5 yrs)","Build confidence and grow production sooner"],
+         ["dso",ROLE_IC.dso,"DSO or group leader","Ramp associates faster across locations"]]
         .map(r => `<button class="role" data-role="${r[0]}"><span class="ic">${r[1]}</span><b>${r[2]}</b><span>${r[3]}</span></button>`).join("")}
     </div>
     <div class="facts">${D.facts.map(f => `<div><b>${f.k}</b>${f.v}</div>`).join("")}</div>
   </div></section>
   ${launchTeaser()}
+  ${roadshowTeaser()}
   ${facultyModel(true)}
   <section class="section"><div class="wrap">
     <h2>How the Growth Accelerator works</h2>
@@ -228,6 +235,92 @@ function facultyModel(compact){
     <p class="hint fm-note">Faculty are shown as roles. No faculty have been named or confirmed for this concept.</p>
   </div></section>`;
 }
+/* ---------- 2027 Roadshow (proposed markets; map data in map-data.js) ---------- */
+const RS_CITIES = [
+  { k: "scottsdale", n: "Scottsdale", home: true, lab: "l" },
+  { k: "chicago", n: "Chicago", lab: "t" },
+  { k: "toronto", n: "Toronto", lab: "t" },
+  { k: "nynj", n: "NY / NJ", lab: "r" },
+  { k: "charlotte", n: "Charlotte", lab: "r" },
+  { k: "dallas", n: "Dallas", lab: "b" },
+  { k: "florida", n: "Florida", lab: "r" }
+];
+const RS_LONDON = { k: "london", n: "London, UK" };
+const RS_FLY = "Come to them. Fits their week. More doctors in. Measured lift and fast payback. Results sell the next city.";
+function rsInfo(c){
+  return c.home
+    ? `<b>Scottsdale, AZ</b><span class="rs-pk">Home campus</span><span>Launch cohort: [dates TBD]</span>`
+    : `<b>${esc(c.n)}</b><span class="rs-pk">Proposed 2027 market</span><span>Launch cohort: [dates TBD]</span>`;
+}
+function rsBase(M){
+  return `<rect width="${M.W}" height="${M.H}" class="rs-sea"/><path class="rs-land" d="${M.land}"/><path class="rs-us" d="${M.usa}"/><path class="rs-st" d="${M.states}"/><path class="rs-lake" d="${M.lakes}"/>`;
+}
+function rsMapSVG(cls){
+  const M = window.SGA_MAP; if (!M) return "";
+  return `<svg class="${cls}" viewBox="0 0 ${M.W} ${M.H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of North America showing the Spear home campus in Scottsdale and proposed 2027 Roadshow markets">${rsBase(M)}${RS_CITIES.map(c=>{ const [x,y]=M.cities[c.k]; return c.home?`<circle class="rs-dot-home" cx="${x}" cy="${y}" r="9"/>`:`<circle class="rs-dot-ring" cx="${x}" cy="${y}" r="8"/>`; }).join("")}</svg>`;
+}
+function roadshowSection(){
+  const M = window.SGA_MAP; if (!M) return "";
+  const pin = c => { const [x,y] = M.cities[c.k];
+    return `<button type="button" class="rs-pin ${c.home?"rs-home":"rs-mkt"} rs-l-${c.lab}" style="left:${(x/M.W*100).toFixed(2)}%;top:${(y/M.H*100).toFixed(2)}%" data-rs="${c.k}" aria-label="${esc(c.n)}: ${c.home?"home campus":"proposed 2027 market"}. Launch cohort: dates to be announced"><span class="rs-dot" aria-hidden="true"></span><span class="rs-lab">${esc(c.n)}</span></button>`; };
+  const U = M.uk;
+  return `<section class="section rs-sec" id="roadshow"><div class="wrap">
+    <div class="rs-head"><span class="eyebrow" style="color:var(--blue)">The 2027 Roadshow</span>
+      <h2>2027 Roadshow: coming to a city near you</h2>
+      <p class="muted rs-lead">The 2-Day Launch comes to you. Accessible, built to fit a busy practice week, with the ROI to prove it.</p></div>
+    <div class="rs-grid">
+      <div class="rs-mapcard">
+        <div class="rs-legend"><span><i class="lg-home"></i>Home campus</span><span><i class="lg-ring"></i>Proposed 2027 market</span></div>
+        <div class="rs-map" id="rsMap">${rsMapSVG("rs-svg")}${RS_CITIES.map(pin).join("")}<div class="rs-pop" id="rsPop" role="status" aria-live="polite" hidden></div></div>
+        <div class="rs-list" role="list">${[...RS_CITIES, RS_LONDON].map(c=>`<button type="button" role="listitem" class="rs-chip ${c.home?"is-home":""}" data-rs="${c.k}"><i></i>${esc(c.n)}</button>`).join("")}</div>
+      </div>
+      <div class="rs-side">
+        <button type="button" class="rs-uk" data-rs="london" aria-label="London, UK: proposed 2027 market. Launch cohort: dates to be announced">
+          <svg viewBox="0 0 ${U.W} ${U.H}" preserveAspectRatio="xMidYMid meet" class="rs-uksvg" aria-hidden="true"><rect width="${U.W}" height="${U.H}" class="rs-sea"/><path class="rs-land" d="${U.fr}"/><path class="rs-land" d="${U.ie}"/><path class="rs-us" d="${U.uk}"/><circle class="rs-dot-ring" cx="${U.london[0]}" cy="${U.london[1]}" r="9"/></svg>
+          <span class="rs-ukt"><span class="rs-k">Across the pond</span><b>London, UK</b><span class="muted">Proposed 2027 market. Proof the Launch travels.</span><span class="rs-coh" id="rsUkCoh">Launch cohort: [dates TBD]</span></span>
+        </button>
+        <div class="rs-fly"><span class="rs-k">The flywheel</span><p>${RS_FLY}</p></div>
+        <p class="hint rs-note"><span class="tag tag-ph">Proposed</span> Proposed 2027 markets for discussion. Cities and dates are not confirmed.</p>
+      </div>
+    </div>
+  </div></section>`;
+}
+function roadshowTeaser(){
+  if (!window.SGA_MAP) return "";
+  return `<section class="section rs-teaser"><div class="wrap"><a class="rs-tcard" href="#/launch/roadshow">
+    <div class="rs-tmap">${rsMapSVG("rs-svg")}</div>
+    <div class="rs-tcopy"><span class="eyebrow" style="color:var(--blue)">The 2027 Roadshow</span>
+      <h3>The 2-Day Launch is coming to a city near you</h3>
+      <p class="muted">Proposed 2027 markets: Chicago, Toronto, NY / NJ, Charlotte, Dallas, Florida and London, UK. Home campus: Scottsdale.</p>
+      <span class="rs-tlink">See the proposed markets <span aria-hidden="true">&rarr;</span></span></div>
+  </a></div></section>`;
+}
+function bindRoadshow(root){
+  const map = $("#rsMap", root), pop = $("#rsPop", root); if (!map || !pop) return;
+  const all = [...RS_CITIES, RS_LONDON]; let pinned = null;
+  const set = (k, pin) => {
+    root.querySelectorAll("[data-rs]").forEach(b => b.classList.toggle("on", b.dataset.rs === k));
+    if (!k) { pop.hidden = true; return; }
+    if (k === "london") { pop.hidden = true; const uk = $(".rs-uk", root); uk.classList.add("on"); return; }
+    const c = all.find(x => x.k === k), [x,y] = window.SGA_MAP.cities[k];
+    pop.innerHTML = rsInfo(c); pop.hidden = false;
+    const mw = map.clientWidth, mh = map.clientHeight, cx = x / window.SGA_MAP.W * mw, cy = y / window.SGA_MAP.H * mh;
+    const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = mw < 500 ? 12 : 18;
+    const left = Math.max(6, Math.min(mw - pw - 6, cx - pw/2));
+    const top = (cy - gap - ph >= 6) ? cy - gap - ph : Math.min(mh - ph - 6, cy + gap);
+    pop.style.left = left + "px"; pop.style.top = top + "px";
+  };
+  root.querySelectorAll("[data-rs]").forEach(b => {
+    const k = b.dataset.rs;
+    b.addEventListener("click", e => { e.stopPropagation(); pinned = pinned === k ? null : k; set(pinned); });
+    b.addEventListener("mouseenter", () => { if (window.matchMedia("(hover: hover)").matches) set(k); });
+    b.addEventListener("mouseleave", () => { if (window.matchMedia("(hover: hover)").matches) set(pinned); });
+    b.addEventListener("focus", () => set(k));
+    b.addEventListener("blur", () => set(pinned));
+  });
+  const off = e => { if (!document.body.contains(map)) { document.removeEventListener("click", off); return; } if (!e.target.closest("[data-rs]")) { pinned = null; set(null); } };
+  document.addEventListener("click", off);
+}
 /* Launch-only economics for one associate. Same model and editable assumptions as the plan page.
    Uses the sample plan's baseline internally; only %, ROI and months are shown. */
 const LCALC = { lift: null, cohort: 12 };
@@ -265,6 +358,7 @@ function launchPage(){
     <section class="agenda" id="agenda">${L.days.map(d=>`<div class="day"><div class="day-h"><span class="day-n">${esc(d.n)}</span><div><h2>${esc(d.t)}</h2><span class="muted">${esc(d.src)}</span></div></div><div class="sess-list">${sess(d)}</div></div>`).join("")}</section>
   </div>
   ${facultyModel(false)}
+  ${roadshowSection()}
   <div class="wrap">
     <div class="two kit-two">
       <div class="panel"><span class="eyebrow" style="color:var(--blue)">Take it home</span><h2 style="margin-top:0">The Monday Morning Kit</h2><p class="muted" style="margin-top:0">Everything you need to run week 1 without rebuilding it yourself.</p>
@@ -297,6 +391,7 @@ function launchPage(){
       <div class="kpi"><small>Time to +5%</small><div class="v">${E.five ? "Month "+E.five : "Not in 12 mo"}</div><div class="d">${c} associates on one clinical language</div></div>`; };
   $("#lcC").oninput = e => { LCALC.cohort = +e.target.value; out(); };
   $("#lcL").oninput = e => { LCALC.lift = +e.target.value; out(); };
+  bindRoadshow(app);
   app.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => document.getElementById(b.dataset.jump).scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }));
   out();
 }
@@ -647,7 +742,7 @@ function planPage(){
     <div class="panel" style="text-align:center;background:linear-gradient(135deg,#fff,#eef2ff)"><h2>Ready to accelerate your growth?</h2><p class="muted">Month 1 starts when you do. A Spear advisor can confirm dates, real tuition and which membership fits.</p>
       <div class="endcta" style="justify-content:center"><a class="btn btn-orange" href="https://www.speareducation.com/request-information/" target="_blank" rel="noopener">Talk to a Spear advisor</a><button class="btn btn-line" id="emailme">Email me this plan</button><a class="btn btn-line" href="#/step/1">Edit my answers</a></div></div>
   </div>
-  <button class="btn drawer-btn" data-open>⚙ Assumptions</button>
+  <button class="btn drawer-btn" data-open><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Assumptions</button>
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="Assumptions"><header><div><b>Assumptions</b><div class="muted" style="font-size:.8rem">Illustrative. Edit any value. Spear must supply real cohort data.</div></div><button class="btn btn-sm" id="closeD">Done</button></header><div class="body">${drawerHtml()}</div></aside>`;
   let pr = document.getElementById("rxPrint"); if (!pr) { pr = document.createElement("div"); pr.id = "rxPrint"; document.body.appendChild(pr); }
@@ -884,6 +979,7 @@ function render(){
     else { history.replaceState(null, "", "#/"); landing(); toast("That prescription link could not be read."); }
   }
   else if (h === "#/launch") { launchPage(); window.scrollTo(0,0); }
+  else if (h === "#/launch/roadshow") { launchPage(); const el = document.getElementById("roadshow"); if (el) { window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 80); } }
   else if (h === "#/plan") { CELEBRATED = false; ANIM = true; planPage(); startMotion(); ANIM = false; }
   else landing();
 }
