@@ -408,6 +408,9 @@ svg.anim.in .fade{opacity:1;transition:opacity .6s ease 1.1s}
 .lc-in label{display:flex;justify-content:space-between;font-weight:600;color:var(--ink);font-size:.92rem;margin-top:8px}
 .lc-in label b{color:var(--blue)}
 .lc-out{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi.lc-hero{grid-column:1/-1;background:linear-gradient(135deg,#000064,#1743d7);color:#fff}
+.kpi.lc-hero small,.kpi.lc-hero .d{color:#d8defa}.kpi.lc-hero .v{color:#fff;font-size:2.6rem}.kpi.lc-hero b{color:#fff}
+.kpi.lc-hero .tag{vertical-align:middle;margin-left:6px}.kpi.lc-hero .lc-24{margin-top:6px;font-size:.8rem}
 .lc-out .kpi{box-shadow:var(--shadow)}
 .lc-out .kpi .v{font-size:1.8rem}
 /* plan: step 1 row */

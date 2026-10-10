@@ -342,7 +342,7 @@ function roadshowPage(){
       <div><b>7</b><span>proposed 2027 markets plus the Scottsdale home campus</span></div>
       <div><b>2 days</b><span>in your market, built to fit a practice week</span></div>
       <div><b>30/60/90</b><span>cohort scorecard after every Launch</span></div>
-      <div><b>${E.pb ? "Month "+E.pb : "12+ mo"}</b><span>illustrative payback per associate</span></div>
+      <div><b id="rsPb">${E.pb ? "Month "+E.pb : "12+ mo"}</b><span>illustrative payback per associate</span></div>
     </div>
     <div class="endcta"><button class="btn btn-orange" data-jump="rs-form">Bring the Roadshow to your doctors</button><button class="btn btn-ghost" data-jump="roadshow">See the cities</button></div>
     <p class="ent-hnote">Concept for discussion. Cities and dates not confirmed.</p>
@@ -364,7 +364,7 @@ function roadshowPage(){
   </div></section>
   <section class="section ent-sec" id="rs-roi"><div class="wrap">
     <div class="panel dso launch-dso"><div class="panel-head"><div><span class="eyebrow" style="color:var(--blue)">DSO ROI snapshot</span><h2 style="margin:0">What one in-market cohort returns</h2>
-      <p class="muted" style="margin:.4em 0 0">Same model as the 2-Day Launch page. Shown as %, ROI and payback months only.</p></div></div>
+      <p class="muted" style="margin:.4em 0 0">Same model as the 2-Day Launch page. Cohort totals, ROI, payback months and % lift. Illustrative.</p></div></div>
       ${lcalcHtml()}
     </div>
   </div></section>
@@ -433,19 +433,19 @@ function bindRoadshow(root){
   const off = e => { if (!document.body.contains(map)) { document.removeEventListener("click", off); return; } if (!e.target.closest("[data-rs]")) { pinned = null; set(null); } };
   document.addEventListener("click", off);
 }
-/* Launch-only economics for one associate. Same model and editable assumptions as the plan page.
-   Uses the sample plan's baseline internally; only %, ROI and months are shown. */
-const LCALC = { lift: null, cohort: 12 };
-const LAUNCH_BASE = 6000; // internal reference associate for Launch/DSO econ (only %, ROI and months are shown)
+/* Launch-only economics for one associate. Same model, headroom curve and editable assumptions as the plan page.
+   Baseline = the "Avg associate production per day" slider (default $2,500). Shown as %, months, ROI and annual or cohort totals, never a $/day result. */
+const LCALC = { lift: null, cohort: 12, base: null };
 function launchEcon(lift, base){
-  const A = S.A, days = 4, H = 12; base = base || LAUNCH_BASE; const mb = base*days*A.weeks/12;
+  const A = S.A, days = 4, H = 24; base = base || LCALC.base || DEFAULT_DAY; const mb = base*days*A.weeks/12;
   const HM = headroom(base, A), rs = [], raw = [];
   pushRamps(rs, raw, HM, A, 1 + A.lagMonths, 1 + A.lagMonths, lift);
   const lv = m => cappedLift(rs, raw, m, HM);
-  const mem = D.tiers.foundations.annual/12; let cc=0, cs=0; const ms=[];
-  for (let m=1; m<=H; m++){ const l = lv(m); cc += mb*l*A.margin; cs += mem + (m===1 ? D.launch.price + A.travel + (A.includeChairDays ? 2*base*A.margin : 0) : 0); ms.push({ m, l, cc, cs }); }
-  const pb = ms.find(x => x.cc >= x.cs), five = ms.find(x => x.l >= 0.05 - 1e-9);
-  return { m3: ms[2].l, m6: ms[5].l, m12: ms[11].l, roi: (ms[11].cc - ms[11].cs)/ms[11].cs, pb: pb ? pb.m : null, five: five ? five.m : null };
+  const mem = D.tiers.foundations.annual/12; let cc=0, cs=0, cp=0; const ms=[];
+  for (let m=1; m<=H; m++){ const l = lv(m); cp += mb*l; cc += mb*l*A.margin; cs += mem + (m===1 ? D.launch.price + A.travel + (A.includeChairDays ? 2*base*A.margin : 0) : 0); ms.push({ m, l, cp, cc, cs }); }
+  const y1 = ms.slice(0, 12), pb = y1.find(x => x.cc >= x.cs), five = y1.find(x => x.l >= 0.05 - 1e-9);
+  return { m3: ms[2].l, m6: ms[5].l, m12: ms[11].l, roi: (ms[11].cc - ms[11].cs)/ms[11].cs, pb: pb ? pb.m : null, five: five ? five.m : null,
+    base, k: HM.k, prod12: ms[11].cp, contrib12: ms[11].cc, prod24: ms[23].cp, contrib24: ms[23].cc };
 }
 function launchPage(){
   document.title = COURSE_FULL + " | Spear Growth Accelerator (concept)";
@@ -500,21 +500,27 @@ function launchPage(){
 }
 function lcalcHtml(){
   if (LCALC.lift === null) LCALC.lift = S.A.launchLift;
+  if (!LCALC.base) LCALC.base = DEFAULT_DAY;
   return `<div class="lcalc"><div class="lc-in">
+          <label for="lcB">Avg associate production per day <b id="lcBv">${money(LCALC.base)}</b></label><input id="lcB" class="range" type="range" min="1000" max="8000" step="250" value="${LCALC.base}">
           <label for="lcC">Associates in the cohort <b id="lcCv">${LCALC.cohort}</b></label><input id="lcC" class="range" type="range" min="4" max="40" step="1" value="${LCALC.cohort}">
           <label for="lcL">Production per hour lift at full effect <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.02" max="0.2" step="0.005" value="${LCALC.lift}">
-          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp, ${pct(S.A.margin,0)} margin. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
+          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp (shorter for lower producers), ${pct(S.A.margin,0)} margin. Headroom effect from the plan page applies to the production you set. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
         <div class="lc-out" id="lcOut"></div></div>`;
 }
 function bindLcalc(){
   if (!$("#lcOut")) return;
-  const out = () => { const E = launchEcon(LCALC.lift), c = LCALC.cohort;
-    $("#lcCv").textContent = c; $("#lcLv").textContent = pct(LCALC.lift);
-    $("#lcOut").innerHTML = `<div class="kpi hl"><small>Payback</small><div class="v">${E.pb ? "Month "+E.pb : "After 12"}</div><div class="d">Per associate, and for the cohort</div></div>
+  const out = () => { const E = launchEcon(LCALC.lift, LCALC.base), c = LCALC.cohort;
+    $("#lcCv").textContent = c; $("#lcLv").textContent = pct(LCALC.lift); $("#lcBv").textContent = money(LCALC.base);
+    $("#lcOut").innerHTML = `<div class="kpi lc-hero"><small>Cohort production added, first 12 months <span class="tag tag-assume">Illustrative</span></small><div class="v">+${money(E.prod12*c)}</div>
+        <div class="d">${c} associates. Per associate: <b>+${money(E.prod12)}</b>. Contribution to the DSO at ${pct(S.A.margin,0)} margin: <b>+${money(E.contrib12*c)}</b>.</div>
+        <div class="d lc-24">First 24 months, if gains hold: <b>+${money(E.prod24*c)}</b> production, <b>+${money(E.contrib24*c)}</b> contribution.</div></div>
+      <div class="kpi hl"><small>Payback</small><div class="v">${E.pb ? "Month "+E.pb : "After 12"}</div><div class="d">Per associate, and for the cohort</div></div>
       <div class="kpi"><small>12-month ROI</small><div class="v">${pct(E.roi,0)}</div><div class="d">Contribution vs launch cost</div></div>
       <div class="kpi"><small>Production per hour</small><div class="v">+${pct(E.m12)}</div><div class="d">by month 12 · +${pct(E.m3)} by month 3</div></div>
       <div class="kpi"><small>Time to +5%</small><div class="v">${E.five ? "Month "+E.five : "Not in 12 mo"}</div><div class="d">${c} associates on one clinical language</div></div>`; };
   $("#lcC").oninput = e => { LCALC.cohort = +e.target.value; out(); };
+  $("#lcB").oninput = e => { LCALC.base = +e.target.value; out(); const st = $("#rsPb"); if (st) { const E = launchEcon(S.A.launchLift, LCALC.base); st.textContent = E.pb ? "Month "+E.pb : "12+ mo"; } };
   $("#lcL").oninput = e => { LCALC.lift = +e.target.value; out(); };
   out();
 }
