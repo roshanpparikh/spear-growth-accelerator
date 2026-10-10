@@ -34,18 +34,18 @@ window.SP_DATA = {
   launch: {
     d: 2, cat: "Flagship launch",
     days: [
-      { n: "Day 1", t: "See the whole patient", src: "Built on Spear Foundations", sessions: [
+      { n: "Day 1", t: "See it, then say it", src: "Built on Spear Foundations", sessions: [
         { t: "The comprehensive exam", what: "A repeatable exam flow that finds what single-tooth dentistry misses.", mon: "Run the full comprehensive exam on every new patient this week, checklist in hand.", kpi: "Comprehensive exams per week" },
-        { t: "Records that sell the case", what: "The photo series, scans and models that let patients see what you see.", mon: "Take a full photo series on your first 3 new patients.", kpi: "% of new patients with complete records" },
-        { t: "Diagnosis that starts at the face", what: "Facially Generated Treatment Planning basics: esthetics, function, structure, biology.", mon: "Sort every new-patient finding into the four categories before you write a plan.", kpi: "Diagnosed treatment per comprehensive exam, % change" },
+        { t: "Fast records and face-first diagnosis (short block)", what: "A 10-minute smartphone photo series plus scans, then sort findings into esthetics, function, structure, biology. Enough to see it and show it, no studio required.", mon: "Take the phone photo series on your first 3 new patients and sort findings into the four categories.", kpi: "% of new patients with complete records" },
         { t: "Occlusion and esthetic fundamentals", what: "Spot wear, instability and esthetic risk early, before they become failures.", mon: "Add a 2-minute occlusal and esthetic screen to every adult exam.", kpi: "% of adult exams with a documented screen" },
-        { t: "Communicating findings", what: "Co-discovery: patients walk through their own photos and own the problem.", mon: "Review photos chairside with every new patient using the findings script.", kpi: "% of patients who book the next visit before leaving" }
+        { t: "Communicating findings (extended block, live role-play)", what: "Co-discovery: patients walk through their own photos and own the problem. Practice the words in pairs until they sound like you.", mon: "Review photos chairside with every new patient using the findings script.", kpi: "% of patients who book the next visit before leaving" },
+        { t: "Chairside confidence", what: "Say what you see, recommend what you would do for your own family, and stop apologizing for the fee. Reps with your near-peer co-lead, filmed and debriefed.", mon: "Make one clear recommendation per new patient, in one sentence, with no hedging words.", kpi: "% of new patients given a clear recommendation" }
       ]},
-      { n: "Day 2", t: "Plan it, phase it, present it", src: "Built on Treatment Planning with Confidence", sessions: [
+      { n: "Day 2", t: "Plan it, present it, close it", src: "Built on Treatment Planning with Confidence", sessions: [
         { t: "Sequencing that holds up", what: "Disease control first, then foundation, then function and esthetics. In that order, every time.", mon: "Re-sequence 2 of your open treatment plans with the sequencing template.", kpi: "% of plans with a documented sequence" },
         { t: "Phased plans patients can say yes to", what: "Break big cases into phases that fit the patient's time, budget and priorities.", mon: "Offer every major case in 2 or 3 phases, with phase 1 ready to schedule today.", kpi: "Case acceptance % on multi-phase plans" },
-        { t: "Presenting the plan", what: "A sit-down consult structure that turns findings into decisions.", mon: "Run one sit-down consult away from the chair using the presentation template.", kpi: "Case acceptance %" },
-        { t: "Case acceptance and follow-up", what: "Handle \u201clet me think about it\u201d without discounting or pressure.", mon: "Call every unscheduled plan within 48 hours using the follow-up script.", kpi: "% of unscheduled treatment recovered" },
+        { t: "Presenting the plan (extended block, live role-play)", what: "A sit-down consult structure that turns findings into decisions. Each doctor presents a real case to a mock patient and gets coached on words, pacing and silence.", mon: "Run one sit-down consult away from the chair using the presentation template.", kpi: "Case acceptance %" },
+        { t: "Case acceptance and objections (extended block, live role-play)", what: "Handle \u201clet me think about it,\u201d \u201cis insurance covering this?\u201d and \u201cthat's a lot\u201d without discounting or pressure. Practice every objection out loud.", mon: "Call every unscheduled plan within 48 hours using the follow-up script.", kpi: "% of unscheduled treatment recovered" },
         { t: "Your 90-day production plan", what: "Set your baseline, pick three numbers, commit to the first week.", mon: "Log your baseline: production per hour, case acceptance %, exams per week.", kpi: "Production per hour, % lift vs baseline" }
       ]}
     ],
@@ -56,9 +56,9 @@ window.SP_DATA = {
       { k: "Production per hour", v: "+10%", s: "by day 90, vs baseline" }
     ],
     kit: [
-      ["Comprehensive exam checklist", "Checklist"], ["Photo series cheat sheet", "Checklist"], ["Four-category diagnosis worksheet", "Template"],
+      ["Comprehensive exam checklist", "Checklist"], ["10-minute smartphone photo series", "Checklist"], ["Chairside confidence phrases (and words to drop)", "Script"],
       ["2-minute occlusal and esthetic screen", "Checklist"], ["Findings conversation script", "Script"], ["Sequencing template", "Template"],
-      ["Phased plan template", "Template"], ["Sit-down consult presentation", "Template"], ["48-hour follow-up call and text scripts", "Script"],
+      ["Phased plan template", "Template"], ["Sit-down consult presentation", "Template"], ["Objection handling scripts plus 48-hour follow-up", "Script"],
       ["90-day scorecard: baseline plus 3 numbers", "Template"]
     ],
     followup: [
