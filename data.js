@@ -1,3 +1,10 @@
+/* =====================================================================
+   COURSE NAME: edit this ONE line to rename the flagship 2-day course
+   everywhere on the site (landing, launch page, plan, Rx print view).
+   ===================================================================== */
+window.SGA_COURSE_NAME = "[Course name TBD]";
+window.SGA_COURSE_SUFFIX = "The 2-Day Growth Accelerator Launch";
+
 /* Spear Growth Accelerator prototype data.
    REAL = published on speareducation.com / campus.speareducation.com / app.speareducation.com as of Oct 8, 2026.
    PLACEHOLDER = invented for the prototype. Every placeholder is labeled in the UI. */
@@ -22,6 +29,44 @@ window.SP_DATA = {
     { id: "occ",  label: "Occlusion and TMD", icon: "⧖", lift: 0.04, hyg: 0, ws: [{ n: "Occlusion in Clinical Practice", d: 3, cat: "Spear Core" }, { n: "Advanced Occlusion", d: 3, cat: "Special Focus" }] },
     { id: "team", label: "Team and leadership", icon: "◇", lift: 0.04, hyg: 0.06, ws: [{ n: "Train Your Team to Shine: Best Practice Systems Playbook", d: 2, cat: "Team" }, { n: "The Leadership/ Management Bootcamp", d: 2, cat: "Team" }] }
   ],
+  // FLAGSHIP 2-DAY LAUNCH (concept). Combines Spear Foundations (Day 1) + Treatment Planning with Confidence (Day 2).
+  // Everything here is a concept for discussion. Faculty are roles, not people. Targets are illustrative.
+  launch: {
+    d: 2, cat: "Flagship launch",
+    days: [
+      { n: "Day 1", t: "See the whole patient", src: "Built on Spear Foundations", sessions: [
+        { t: "The comprehensive exam", what: "A repeatable exam flow that finds what single-tooth dentistry misses.", mon: "Run the full comprehensive exam on every new patient this week, checklist in hand.", kpi: "Comprehensive exams per week" },
+        { t: "Records that sell the case", what: "The photo series, scans and models that let patients see what you see.", mon: "Take a full photo series on your first 3 new patients.", kpi: "% of new patients with complete records" },
+        { t: "Diagnosis that starts at the face", what: "Facially Generated Treatment Planning basics: esthetics, function, structure, biology.", mon: "Sort every new-patient finding into the four categories before you write a plan.", kpi: "Diagnosed treatment per comprehensive exam, % change" },
+        { t: "Occlusion and esthetic fundamentals", what: "Spot wear, instability and esthetic risk early, before they become failures.", mon: "Add a 2-minute occlusal and esthetic screen to every adult exam.", kpi: "% of adult exams with a documented screen" },
+        { t: "Communicating findings", what: "Co-discovery: patients walk through their own photos and own the problem.", mon: "Review photos chairside with every new patient using the findings script.", kpi: "% of patients who book the next visit before leaving" }
+      ]},
+      { n: "Day 2", t: "Plan it, phase it, present it", src: "Built on Treatment Planning with Confidence", sessions: [
+        { t: "Sequencing that holds up", what: "Disease control first, then foundation, then function and esthetics. In that order, every time.", mon: "Re-sequence 2 of your open treatment plans with the sequencing template.", kpi: "% of plans with a documented sequence" },
+        { t: "Phased plans patients can say yes to", what: "Break big cases into phases that fit the patient's time, budget and priorities.", mon: "Offer every major case in 2 or 3 phases, with phase 1 ready to schedule today.", kpi: "Case acceptance % on multi-phase plans" },
+        { t: "Presenting the plan", what: "A sit-down consult structure that turns findings into decisions.", mon: "Run one sit-down consult away from the chair using the presentation template.", kpi: "Case acceptance %" },
+        { t: "Case acceptance and follow-up", what: "Handle \u201clet me think about it\u201d without discounting or pressure.", mon: "Call every unscheduled plan within 48 hours using the follow-up script.", kpi: "% of unscheduled treatment recovered" },
+        { t: "Your 90-day production plan", what: "Set your baseline, pick three numbers, commit to the first week.", mon: "Log your baseline: production per hour, case acceptance %, exams per week.", kpi: "Production per hour, % lift vs baseline" }
+      ]}
+    ],
+    // ILLUSTRATIVE 90-day targets, shown as % lift only. Spear must validate with cohort data before publishing.
+    targets: [
+      { k: "Case acceptance", v: "+15%", s: "relative lift vs baseline acceptance rate" },
+      { k: "Comprehensive exams per week", v: "+25%", s: "vs the 4 weeks before the course" },
+      { k: "Production per hour", v: "+10%", s: "by day 90, vs baseline" }
+    ],
+    kit: [
+      ["Comprehensive exam checklist", "Checklist"], ["Photo series cheat sheet", "Checklist"], ["Four-category diagnosis worksheet", "Template"],
+      ["2-minute occlusal and esthetic screen", "Checklist"], ["Findings conversation script", "Script"], ["Sequencing template", "Template"],
+      ["Phased plan template", "Template"], ["Sit-down consult presentation", "Template"], ["48-hour follow-up call and text scripts", "Script"],
+      ["90-day scorecard: baseline plus 3 numbers", "Template"]
+    ],
+    followup: [
+      { d: "Day 30", t: "Virtual cohort check-in", s: "60 minutes on video. Report your 3 numbers, troubleshoot with your near-peer co-lead, lock in the next fix." },
+      { d: "Day 60", t: "Case review", s: "Each doctor presents one case planned and presented with the method. Feedback from the cohort and faculty." },
+      { d: "Day 90", t: "Results readout", s: "% lift vs your baseline on all 3 numbers. Graduate into the next workshop in your plan. DSOs get a cohort scorecard." }
+    ]
+  },
   foundationsWorkshop: { n: "Foundations", d: 2, cat: "Spear Technique", price: 3995, real: true, ce: 14 },
   capstone: { n: "Advanced Treatment Planning", d: 3, cat: "Spear Core (capstone)" },
   summit: "Spear Summit 2027, April 7-10, JW Marriott Grande Lakes, Orlando",
@@ -53,6 +98,7 @@ window.SP_DATA = {
     lagMonths: 1, rampMonths: 3, onlineHeadStart: 0.20,
     tuition2: 3995, tuition3: 4995, travel: 1500, includeChairDays: true,
     horizon: 24, billing: "monthly",
-    dsoDoctors: 25, dsoLocations: 10, dsoAdoption: 0.8, dsoProgramFee: 0, dsoReplacement: 0, dsoRetentionLift: 0
+    dsoDoctors: 25, dsoLocations: 10, dsoAdoption: 0.8, dsoProgramFee: 0, dsoReplacement: 0, dsoRetentionLift: 0,
+    launchLift: 0.10
   }
 };
