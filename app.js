@@ -114,8 +114,8 @@ function landing() {
     </div>
     <div class="facts">${D.facts.map(f => `<div><b>${f.k}</b>${f.v}</div>`).join("")}</div>
   </div></section>
-  ${launchTeaser()}
   ${roadshowTeaser()}
+  ${launchTeaser()}
   ${facultyModel(true)}
   <section class="section"><div class="wrap">
     <h2>How the Growth Accelerator works</h2>
@@ -259,41 +259,151 @@ function rsMapSVG(cls){
   const M = window.SGA_MAP; if (!M) return "";
   return `<svg class="${cls}" viewBox="0 0 ${M.W} ${M.H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of North America showing the Spear home campus in Scottsdale and proposed 2027 Roadshow markets">${rsBase(M)}${RS_CITIES.map(c=>{ const [x,y]=M.cities[c.k]; return c.home?`<circle class="rs-dot-home" cx="${x}" cy="${y}" r="9"/>`:`<circle class="rs-dot-ring" cx="${x}" cy="${y}" r="8"/>`; }).join("")}</svg>`;
 }
+const RS_BLURB = {
+  scottsdale: "Where the pathway leads. Campus workshops, membership and the next level of mastery.",
+  chicago: "Midwest hub for multi-state groups.",
+  toronto: "First Canadian cohort.",
+  nynj: "Dense metro with large group footprints.",
+  charlotte: "Southeast hub, for growing multi-location groups.",
+  dallas: "Fast-growing DSO corridor in Texas.",
+  florida: "High-growth Sun Belt market.",
+  london: "Proof the Launch travels."
+};
 function roadshowSection(){
   const M = window.SGA_MAP; if (!M) return "";
   const pin = c => { const [x,y] = M.cities[c.k];
     return `<button type="button" class="rs-pin ${c.home?"rs-home":"rs-mkt"} rs-l-${c.lab}" style="left:${(x/M.W*100).toFixed(2)}%;top:${(y/M.H*100).toFixed(2)}%" data-rs="${c.k}" aria-label="${esc(c.n)}: ${c.home?"home campus":"proposed 2027 market"}. Launch cohort: dates to be announced"><span class="rs-dot" aria-hidden="true"></span><span class="rs-lab">${esc(c.n)}</span></button>`; };
   const U = M.uk;
-  return `<section class="section rs-sec" id="roadshow"><div class="wrap">
-    <div class="rs-head"><span class="eyebrow" style="color:var(--blue)">The 2027 Roadshow</span>
-      <h2>2027 Roadshow: coming to a city near you</h2>
-      <p class="muted rs-lead">The 2-Day Launch comes to you. Accessible, built to fit a busy practice week, with the ROI to prove it.</p></div>
-    <div class="rs-grid">
-      <div class="rs-mapcard">
-        <div class="rs-legend"><span><i class="lg-home"></i>Home campus</span><span><i class="lg-ring"></i>Proposed 2027 market</span></div>
+  const card = c => `<button type="button" class="rs-city ${c.home?"is-home":""}" data-rs="${c.k}"><span class="rs-pk2">${c.home?"Home campus":"Proposed 2027 market"}</span><b>${esc(c.n)}</b><span class="muted">${esc(RS_BLURB[c.k]||"")}</span><span class="rs-coh">Cohort dates TBD</span></button>`;
+  return `<section class="rs-sec rs-sec-x" id="roadshow"><div class="rs-xwrap">
+    <div class="rs-mapcard rs-mapcard-x">
+      <div class="rs-mh"><div><span class="rs-k">The 2027 Roadshow map</span><b class="rs-mt">Seven proposed markets. One home campus.</b></div>
+        <div class="rs-legend"><span><i class="lg-home"></i>Home campus</span><span><i class="lg-ring"></i>Proposed 2027 market</span></div></div>
+      <div class="rs-mapx">
         <div class="rs-map" id="rsMap">${rsMapSVG("rs-svg")}${RS_CITIES.map(pin).join("")}<div class="rs-pop" id="rsPop" role="status" aria-live="polite" hidden></div></div>
-        <div class="rs-list" role="list">${[...RS_CITIES, RS_LONDON].map(c=>`<button type="button" role="listitem" class="rs-chip ${c.home?"is-home":""}" data-rs="${c.k}"><i></i>${esc(c.n)}</button>`).join("")}</div>
-      </div>
-      <div class="rs-side">
         <button type="button" class="rs-uk" data-rs="london" aria-label="London, UK: proposed 2027 market. Launch cohort: dates to be announced">
           <svg viewBox="0 0 ${U.W} ${U.H}" preserveAspectRatio="xMidYMid meet" class="rs-uksvg" aria-hidden="true"><rect width="${U.W}" height="${U.H}" class="rs-sea"/><path class="rs-land" d="${U.fr}"/><path class="rs-land" d="${U.ie}"/><path class="rs-us" d="${U.uk}"/><circle class="rs-dot-ring" cx="${U.london[0]}" cy="${U.london[1]}" r="9"/></svg>
           <span class="rs-ukt"><span class="rs-k">Across the pond</span><b>London, UK</b><span class="muted">Proposed 2027 market. Proof the Launch travels.</span><span class="rs-coh" id="rsUkCoh">Launch cohort: [dates TBD]</span></span>
         </button>
-        <div class="rs-fly"><span class="rs-k">The flywheel</span><p>${RS_FLY}</p></div>
-        <p class="hint rs-note"><span class="tag tag-ph">Proposed</span> Proposed 2027 markets for discussion. Cities and dates are not confirmed.</p>
       </div>
+      <div class="rs-list" role="list">${[...RS_CITIES, RS_LONDON].map(c=>`<button type="button" role="listitem" class="rs-chip ${c.home?"is-home":""}" data-rs="${c.k}"><i></i>${esc(c.n)}</button>`).join("")}</div>
+      <p class="hint rs-note"><span class="tag tag-ph">Proposed</span> Concept for discussion. Cities and dates not confirmed.</p>
     </div>
-  </div></section>`;
+  </div>
+  <div class="wrap"><div class="rs-cities" id="rs-cities">${[...RS_CITIES.filter(c=>!c.home), RS_LONDON, RS_CITIES[0]].map(card).join("")}</div></div>
+  </section>`;
+}
+const FLY = [
+  ["Come to them", "The 2-Day Launch runs in the doctors' own market. No cross-country trip to start."],
+  ["Fits their week", "Two days, close to home, built around a busy practice schedule."],
+  ["More doctors in", "Lower friction means whole cohorts enroll, not one doctor at a time."],
+  ["Measured lift and fast payback", "Each cohort is tracked in % lift on a 30/60/90 scorecard."],
+  ["Results sell the next city", "A strong 90-day readout is the case for the next market."]
+];
+function flywheelSVG(){
+  const cx=330, cy=330, R=216, n=FLY.length, ang=i => (-90 + i*360/n) * Math.PI/180;
+  const pt = (a,r=R) => [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+  const arcs = FLY.map((_,i)=>{ const a0=ang(i)+0.4, a1=ang(i+1)-0.4, [x0,y0]=pt(a0), [x1,y1]=pt(a1);
+    return `<path class="fw-arc" d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" marker-end="url(#fwArrow)"/>`; }).join("");
+  const LINES = [["Come to","them"],["Fits their","week"],["More","doctors in"],["Measured","lift and fast","payback"],["Results sell","the next","city"]];
+  const nodes = FLY.map((f,i)=>{ const [x,y]=pt(ang(i)), ls=LINES[i], y0 = ls.length===3 ? -30 : -20;
+    return `<g class="fw-node" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="72" class="fw-c"/><text class="fw-n" y="${y0}">${i+1}</text>${ls.map((l,j)=>`<text class="fw-t" y="${y0+24+j*19}">${esc(l)}</text>`).join("")}</g>`; }).join("");
+  const orbit = REDUCED ? "" : `<circle r="7" class="fw-dot"><animateMotion dur="14s" repeatCount="indefinite" path="M${cx} ${cy-R} A${R} ${R} 0 1 1 ${cx-0.01} ${cy-R}"/></circle>`;
+  return `<svg class="fw-svg" viewBox="0 0 660 660" role="img" aria-label="The Roadshow flywheel: ${FLY.map((f,i)=>(i+1)+". "+f[0]).join(", ")}, then back to 1">
+    <defs><marker id="fwArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fw-ah"/></marker></defs>
+    <circle cx="${cx}" cy="${cy}" r="${R}" class="fw-ring"/>${arcs}${orbit}
+    <g class="fw-mid"><text x="${cx}" y="${cy-18}" class="fw-mk">The flywheel</text><text x="${cx}" y="${cy+12}" class="fw-mt">Spear Enterprise</text><text x="${cx}" y="${cy+40}" class="fw-mt">2027</text></g>
+    ${nodes}</svg>`;
+}
+function roadshowPage(){
+  document.title = "Spear Enterprise. Relaunched. The 2027 Roadshow | Spear Growth Accelerator (concept)";
+  const E = launchEcon(S.A.launchLift);
+  const PIL = [
+    [SVG('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'), "In-market 2-Day Launch cohorts", "The flagship Launch, Foundations plus Treatment Planning with Confidence, delivered in your market to a cohort of your doctors."],
+    [ICON.team, "Legendary faculty plus near-peer co-leads", "Every session is co-led: a senior Spear faculty member for the why, a near-peer co-lead for how it runs on Monday."],
+    [SVG('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'), "30/60/90 implementation and cohort scorecard", "Virtual check-ins at 30, 60 and 90 days, with each cohort measured in % lift against its own baseline."],
+    [SVG('<path d="M3 12h13"/><path d="M12 6l6 6-6 6"/><path d="M21 4v16"/>'), "A pathway into campus and membership", "The Roadshow starts the pathway. Campus workshops in Scottsdale and membership are where it leads, so the campus becomes the destination the pathway sells."]
+  ];
+  const HOW = [
+    ["Pick a market", "Choose the proposed 2027 city closest to your doctors."],
+    ["Enroll a cohort", "New and early-career associates start together, on one clinical language."],
+    ["Launch", "Two days in market. Every session ends with a Monday-morning action and one number to track."],
+    ["90-day readout", "Your cohort scorecard: % lift, time to payback and implementation by doctor."],
+    ["Next city", "Use the readout to roll the next cohort into your next market."]
+  ];
+  app.innerHTML = `
+  <section class="ent-hero"><div class="wrap">
+    <span class="eyebrow ent-eyebrow"><span class="ent-new">New for 2027</span> Spear Enterprise relaunch</span>
+    <h1>Spear Enterprise. Relaunched.<span class="ent-h1b">The 2027 Roadshow.</span></h1>
+    <p class="ent-lead">Spear comes to your doctors. The enterprise offer for DSOs and multi-location groups is rebuilt around the 2-Day Launch, delivered in your market, cohort by cohort, with measured lift and fast payback.</p>
+    <div class="ent-stats">
+      <div><b>7</b><span>proposed 2027 markets plus the Scottsdale home campus</span></div>
+      <div><b>2 days</b><span>in your market, built to fit a practice week</span></div>
+      <div><b>30/60/90</b><span>cohort scorecard after every Launch</span></div>
+      <div><b>${E.pb ? "Month "+E.pb : "12+ mo"}</b><span>illustrative payback per associate</span></div>
+    </div>
+    <div class="endcta"><button class="btn btn-orange" data-jump="rs-form">Bring the Roadshow to your doctors</button><button class="btn btn-ghost" data-jump="roadshow">See the cities</button></div>
+    <p class="ent-hnote">Concept for discussion. Cities and dates not confirmed.</p>
+  </div></section>
+  ${roadshowSection()}
+  <section class="section ent-sec" id="rs-why"><div class="wrap">
+    <div class="ent-head"><span class="eyebrow" style="color:var(--blue)">Why now</span><h2>What's new in Spear Enterprise 2027</h2>
+      <p class="muted">The same Spear standard, rebuilt to reach every doctor in a group, not only the ones who can fly to campus.</p></div>
+    <div class="ent-pillars">${PIL.map((p,i)=>`<div class="ent-pil"><span class="ent-pic">${p[0]}</span><span class="ent-pn">0${i+1}</span><h3>${p[1]}</h3><p class="muted">${p[2]}</p></div>`).join("")}</div>
+  </div></section>
+  <section class="section ent-sec ent-how-sec" id="rs-how"><div class="wrap">
+    <div class="ent-head"><span class="eyebrow" style="color:var(--blue)">How a DSO partners</span><h2>Five steps from first cohort to next city</h2></div>
+    <ol class="ent-how">${HOW.map((h,i)=>`<li><span class="ent-hn">${i+1}</span><b>${h[0]}</b><span class="muted">${h[1]}</span></li>`).join("")}</ol>
+  </div></section>
+  <section class="section ent-sec ent-fly-sec" id="rs-flywheel"><div class="wrap ent-fly">
+    <div class="ent-fly-g">${flywheelSVG()}</div>
+    <div class="ent-fly-c"><span class="eyebrow ent-eyebrow">The flywheel</span><h2>Every city makes the next one easier</h2>
+      <ol class="ent-fl">${FLY.map((f,i)=>`<li><span class="ent-hn">${i+1}</span><div><b>${f[0]}</b><span>${f[1]}</span></div></li>`).join("")}</ol></div>
+  </div></section>
+  <section class="section ent-sec" id="rs-roi"><div class="wrap">
+    <div class="panel dso launch-dso"><div class="panel-head"><div><span class="eyebrow" style="color:var(--blue)">DSO ROI snapshot</span><h2 style="margin:0">What one in-market cohort returns</h2>
+      <p class="muted" style="margin:.4em 0 0">Same model as the 2-Day Launch page. Shown as %, ROI and payback months only.</p></div></div>
+      ${lcalcHtml()}
+    </div>
+  </div></section>
+  <section class="section ent-cta-sec" id="rs-form"><div class="wrap"><div class="ent-cta">
+    <div class="ent-cta-c"><span class="eyebrow ent-eyebrow">Spear Enterprise 2027</span><h2>Bring the Roadshow to your doctors</h2>
+      <p>Tell us where your doctors are and how many you would enroll. A Spear Enterprise advisor would follow up to plan a cohort.</p>
+      <p class="ent-hnote">Concept form. Nothing here is submitted, stored or sent.</p></div>
+    <form class="ent-form" id="rsForm" novalidate>
+      <span class="tag tag-ph ent-ftag">Concept · submits nowhere</span>
+      <label>Organization<input type="text" name="org" placeholder="Your DSO or group" autocomplete="off"></label>
+      <label>Your role<select name="role"><option>Clinical leader</option><option>Operations or training leader</option><option>Executive</option><option>Practice owner, multi-location</option></select></label>
+      <div class="ent-f2"><label>Doctors to enroll<input type="number" name="docs" min="1" placeholder="12"></label>
+        <label>Preferred market<select name="mkt">${[...RS_CITIES.filter(c=>!c.home), RS_LONDON].map(c=>`<option>${esc(c.n)}</option>`).join("")}<option>Scottsdale home campus</option><option>Not sure yet</option></select></label></div>
+      <label>Timing<select name="when"><option>First half of 2027</option><option>Second half of 2027</option><option>Exploring</option></select></label>
+      <button class="btn btn-orange" type="submit">Request a Roadshow cohort</button>
+      <p class="ent-fmsg" id="rsMsg" role="status" aria-live="polite" hidden>Thanks. This is a concept prototype, so nothing was sent. In the live version, a Spear Enterprise advisor would follow up.</p>
+    </form>
+  </div></div></section>`;
+  bindRoadshow(app); bindLcalc();
+  app.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => { const el = document.getElementById(b.dataset.jump); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: REDUCED ? "auto" : "smooth" }); });
+  $("#rsForm").onsubmit = e => { e.preventDefault(); $("#rsMsg").hidden = false; toast("Concept only. Nothing was sent."); };
 }
 function roadshowTeaser(){
   if (!window.SGA_MAP) return "";
-  return `<section class="section rs-teaser"><div class="wrap"><a class="rs-tcard" href="#/launch/roadshow">
-    <div class="rs-tmap">${rsMapSVG("rs-svg")}</div>
-    <div class="rs-tcopy"><span class="eyebrow" style="color:var(--blue)">The 2027 Roadshow</span>
-      <h3>The 2-Day Launch is coming to a city near you</h3>
-      <p class="muted">Proposed 2027 markets: Chicago, Toronto, NY / NJ, Charlotte, Dallas, Florida and London, UK. Home campus: Scottsdale.</p>
-      <span class="rs-tlink">See the proposed markets <span aria-hidden="true">&rarr;</span></span></div>
+  return `<section class="ent-band" id="enterprise-band"><div class="wrap"><a class="rs-tcard ent-card" href="#/roadshow">
+    <div class="ent-copy"><span class="eyebrow ent-eyebrow"><span class="ent-new">New for 2027</span> Spear Enterprise</span>
+      <h2>Spear Enterprise. Relaunched. <span class="ent-h-sub">The 2027 Roadshow.</span></h2>
+      <p>Spear comes to your doctors. The enterprise offer for DSOs and multi-location groups is rebuilt around the 2-Day Launch, delivered in your market as a cohort, with measured lift and fast payback.</p>
+      <ul class="ent-pts"><li>In-market 2-Day Launch cohorts</li><li>Legendary faculty plus near-peer co-leads</li><li>30/60/90 cohort scorecard</li></ul>
+      <span class="ent-go">See the 2027 Roadshow <span aria-hidden="true">&rarr;</span></span>
+      <span class="ent-note">Proposed markets. Concept for discussion. Cities and dates not confirmed.</span></div>
+    <div class="ent-map"><div class="rs-tmap">${rsMapSVG("rs-svg")}</div>
+      <div class="ent-cities">${[...RS_CITIES.filter(c=>!c.home), RS_LONDON].map(c=>`<span>${esc(c.n)}</span>`).join("")}<span class="is-home">Scottsdale home campus</span></div></div>
   </a></div></section>`;
+}
+function rsCallout(where){
+  const t = where === "dso"
+    ? ["For DSOs and groups", "Spear Enterprise is relaunching with the 2027 Roadshow", "Bring the 2-Day Launch to your market as a cohort: in-market delivery, a 30/60/90 scorecard and payback measured in months."]
+    : ["Spear Enterprise 2027", "This Launch is coming to your market", "The 2027 Roadshow takes the 2-Day Launch on the road for DSOs and multi-location groups. Proposed markets: Chicago, Toronto, NY / NJ, Charlotte, Dallas, Florida and London, UK."];
+  return `<a class="rs-callout${where==="dso"?" rs-callout-dso":""}" href="#/roadshow"><span class="rs-ci" aria-hidden="true">${SVG('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>')}</span>
+    <span class="rs-ct"><span class="rs-k">${t[0]}</span><b>${t[1]}</b><span>${t[2]}</span></span><span class="rs-cgo">See the Roadshow <span aria-hidden="true">&rarr;</span></span></a>`;
 }
 function bindRoadshow(root){
   const map = $("#rsMap", root), pop = $("#rsPop", root); if (!map || !pop) return;
@@ -358,7 +468,7 @@ function launchPage(){
     <section class="agenda" id="agenda">${L.days.map(d=>`<div class="day"><div class="day-h"><span class="day-n">${esc(d.n)}</span><div><h2>${esc(d.t)}</h2><span class="muted">${esc(d.src)}</span></div></div><div class="sess-list">${sess(d)}</div></div>`).join("")}</section>
   </div>
   ${facultyModel(false)}
-  ${roadshowSection()}
+  <div class="wrap rs-callwrap">${rsCallout("launch")}</div>
   <div class="wrap">
     <div class="two kit-two">
       <div class="panel"><span class="eyebrow" style="color:var(--blue)">Take it home</span><h2 style="margin-top:0">The Monday Morning Kit</h2><p class="muted" style="margin-top:0">Everything you need to run week 1 without rebuilding it yourself.</p>
@@ -373,16 +483,27 @@ function launchPage(){
       <div class="dso3"><div><b>Cohort-based onboarding</b><span>New associates start together, learn together, and check in together at 30, 60 and 90 days.</span></div>
         <div><b>Clinical consistency</b><span>The same exam, records, sequencing and consult flow in every office.</span></div>
         <div><b>Faster time to production</b><span>Monday-morning actions mean the ramp starts in week 1, not month 6.</span></div></div>
-      <div class="lcalc"><div class="lc-in">
-          <label for="lcC">Associates in the cohort <b id="lcCv">${LCALC.cohort}</b></label><input id="lcC" class="range" type="range" min="4" max="40" step="1" value="${LCALC.cohort}">
-          <label for="lcL">Production per hour lift at full effect <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.02" max="0.2" step="0.005" value="${LCALC.lift}">
-          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp, ${pct(S.A.margin,0)} margin. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
-        <div class="lc-out" id="lcOut"></div></div>
+      ${lcalcHtml()}
+      ${rsCallout("dso")}
     </div>
 
     <div class="panel" style="text-align:center;background:linear-gradient(135deg,#fff,#eef2ff)"><h2>Start with the Launch. Build from there.</h2><p class="muted">Every Growth Accelerator plan puts this course in step 1, then sequences the workshops that fit your goals.</p>
       <div class="endcta" style="justify-content:center"><a class="btn btn-orange" href="#/step/1">Build my growth plan</a><a class="btn btn-line" href="https://www.speareducation.com/request-information/" target="_blank" rel="noopener">Talk to a Spear advisor</a></div></div>
   </div>`;
+  bindLcalc();
+  bindRoadshow(app);
+  app.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => document.getElementById(b.dataset.jump).scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }));
+}
+function lcalcHtml(){
+  if (LCALC.lift === null) LCALC.lift = S.A.launchLift;
+  return `<div class="lcalc"><div class="lc-in">
+          <label for="lcC">Associates in the cohort <b id="lcCv">${LCALC.cohort}</b></label><input id="lcC" class="range" type="range" min="4" max="40" step="1" value="${LCALC.cohort}">
+          <label for="lcL">Production per hour lift at full effect <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.02" max="0.2" step="0.005" value="${LCALC.lift}">
+          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp, ${pct(S.A.margin,0)} margin. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
+        <div class="lc-out" id="lcOut"></div></div>`;
+}
+function bindLcalc(){
+  if (!$("#lcOut")) return;
   const out = () => { const E = launchEcon(LCALC.lift), c = LCALC.cohort;
     $("#lcCv").textContent = c; $("#lcLv").textContent = pct(LCALC.lift);
     $("#lcOut").innerHTML = `<div class="kpi hl"><small>Payback</small><div class="v">${E.pb ? "Month "+E.pb : "After 12"}</div><div class="d">Per associate, and for the cohort</div></div>
@@ -391,8 +512,6 @@ function launchPage(){
       <div class="kpi"><small>Time to +5%</small><div class="v">${E.five ? "Month "+E.five : "Not in 12 mo"}</div><div class="d">${c} associates on one clinical language</div></div>`; };
   $("#lcC").oninput = e => { LCALC.cohort = +e.target.value; out(); };
   $("#lcL").oninput = e => { LCALC.lift = +e.target.value; out(); };
-  bindRoadshow(app);
-  app.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => document.getElementById(b.dataset.jump).scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }));
   out();
 }
 
@@ -774,6 +893,7 @@ function dsoHtml(R){
     <div class="kpi"><small>Year 1 ROI</small><div class="v">${pct(roi,0)}</div><div class="d">${money(y.cc,{short:true})} contribution on ${money(y.cs,{short:true})} spend</div></div>
     <div class="kpi"><small>House money, ${H} months</small><div class="v">${cnt(L.cc-L.cs,"money")}</div><div class="d">${money((L.cc-L.cs)/S.dso.locations,{short:true})} per location</div></div>
   </div>
+  ${rsCallout("dso")}
   ${houseChart(Rd,1,"DSO total")}
   <p class="hint" style="text-align:left">Per-doctor plan × doctors × completion rate. Every associate starts with the 2-Day Launch as part of a cohort. Enterprise pricing and the Associate Foundations Program price are not published, so per-doctor cost uses the individual plan above plus the one-time fee you enter. Retention value (replacement cost × retention lift) is off by default: add your own in Assumptions. Real proof points to cite: Select Dental (12% daily production in 3 months, 10-doctor pilot), NADG (new-clinician retention up from about 70% to 80-85%).</p>
   <div class="tgrid" style="margin-top:12px">${[T("ponzio"),T("dudley"),T("portnoff")].map(x=>tcard(x)).join("")}</div>`;
@@ -970,6 +1090,7 @@ function render(){
   if (building._stop) { building._stop(); building._stop = null; }
   const h = location.hash || "#/";
   document.body.classList.toggle("in-funnel", /^#\/step/.test(h));
+  document.querySelectorAll(".topnav [data-nav]").forEach(a => a.classList.toggle("is-cur", a.getAttribute("href") === (/^#\/roadshow/.test(h) ? "#/roadshow" : h)));
   let m;
   if (!/^#\/(plan|rx\/)/.test(h)) { const pr = document.getElementById("rxPrint"); if (pr) pr.remove(); SHARED = false; }
   if ((m = h.match(/^#\/step\/(\d+)/))) stepView(+m[1]);
@@ -979,11 +1100,13 @@ function render(){
     else { history.replaceState(null, "", "#/"); landing(); toast("That prescription link could not be read."); }
   }
   else if (h === "#/launch") { launchPage(); window.scrollTo(0,0); }
-  else if (h === "#/launch/roadshow") { launchPage(); const el = document.getElementById("roadshow"); if (el) { window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 80); } }
+  else if (h === "#/roadshow") { roadshowPage(); window.scrollTo(0,0); }
+  else if (h === "#/launch/roadshow" || h === "#/roadshow/cities") { history.replaceState(null, "", "#/roadshow/cities"); roadshowPage(); const el = document.getElementById("roadshow"); if (el) { window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 70); } }
   else if (h === "#/plan") { CELEBRATED = false; ANIM = true; planPage(); startMotion(); ANIM = false; }
   else landing();
 }
 window.addEventListener("hashchange", render);
+document.addEventListener("click", e => { const a = e.target.closest && e.target.closest('a[href^="#/"]'); if (a && a.getAttribute("href") === location.hash) { e.preventDefault(); render(); } });
 document.addEventListener("keydown", e => { if (e.key === "Enter" && /#\/step/.test(location.hash) && !e.target.matches("button")) { e.preventDefault(); next(); } });
 render();
 })();
