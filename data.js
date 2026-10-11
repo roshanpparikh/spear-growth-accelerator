@@ -37,7 +37,7 @@ window.SP_DATA = {
     offers: {
       core: { k: "core", name: "2-Day Launch", price: 2495, tagline: "The 2 days, on their own.",
         inc: ["2 live days: exam, diagnosis, planning and the money conversation", "Monday Morning Kit", "30-day virtual check-in"] },
-      plus: { k: "plus", name: "Launch+", price: 4995, flagship: true, tagline: "The 2 days, then 6 months of reps, coaching and measurement.",
+      plus: { k: "plus", name: "Launch+ Hands-On", price: 4995, flagship: true, tagline: "The 2 days, then 6 months of reps, coaching and measurement.",
         inc: ["Everything in the 2-Day Launch", "Virtual hands-on restorative track: typodont shipped to your office, scan feedback from faculty, live timed prep assessment", "30/60/90 coaching and the 90-Day Scorecard", "6-month study club with your cohort"] }
     },
     // VIRTUAL HANDS-ON TRACK (inside Launch+). Design follows Dr. Dan Butterman's Oct 1, 2026 plan: practice on your own time
