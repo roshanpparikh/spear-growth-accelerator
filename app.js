@@ -34,7 +34,7 @@ const fresh = () => ({
   role: null, metric: "day", value: "", hours: 8, days: 4, hygShare: 0.3, target: null,
   years: null, love: [], master: [], pace: 1, block: 4,
   dso: { doctors: D.defaults.dsoDoctors, locations: D.defaults.dsoLocations, adoption: D.defaults.dsoAdoption },
-  showDso: false, roleVia: null, vsNothing: true,
+  showDso: false, roleVia: null, vsNothing: true, launchTier: "plus",
   A: Object.assign({}, D.defaults, { lifts: Object.fromEntries(D.areas.map(a => [a.id, a.lift])), hygLift: 0.06, foundationsLift: 0.05, capstoneLift: 0.02, secondWsShare: 0.5 })
 });
 let S = fresh();
@@ -206,6 +206,12 @@ function bindVideo(){
 
 /* ---------- flagship: 2-Day Launch ---------- */
 const L = D.launch;
+/* Two tiers: "plus" (Launch+, flagship, default everywhere) and "core" (the 2-Day Launch alone). */
+const tierKey = k => k === "core" ? "core" : "plus";
+const launchTier = () => tierKey(S.launchTier);
+const offer = k => L.offers[tierKey(k)];
+// Launch alone has no hands-on track and a 30-day check-in only, so it is modeled at a share of the Launch+ lift (illustrative, editable).
+const tierLift = (lift, k, A) => tierKey(k) === "core" ? lift*(isFinite((A||S.A).launchCoreShare) ? (A||S.A).launchCoreShare : 0.75) : lift;
 const SESS = () => L.days.flatMap(d => d.sessions);
 const courseH = (tag="h2") => `<${tag} class="cname-h"><span class="cname" data-course-name>${esc(COURSE)}:</span> ${esc(COURSE_SUFFIX).replace("2-Day","2&#8209;Day").replace("Launch","<mark>Launch</mark>")}</${tag}>`;
 function silhouette(kind){
@@ -217,7 +223,8 @@ function launchTeaser(){
     <div class="lt-copy"><span class="eyebrow lt-eyebrow">Flagship · Step 1 in every plan</span>
       ${courseH()}
       <p class="lead-dark">A 2-day loading dose for early-career dentists (0 to 5 years) and DSO clinicians. Day 1 is Spear Foundations. Day 2 is Treatment Planning with Confidence. Every session ends with one thing you do Monday morning and one number you track.</p>
-      <ul class="lt-points"><li><b>10 sessions, 10 Monday-morning actions.</b> Implement in your first clinical week.</li><li><b>Measured in % lift.</b> Case acceptance, comprehensive exams, production per hour.</li><li><b>30/60/90 cohort follow-up.</b> The course ends. The accountability does not.</li></ul>
+      <ul class="lt-points"><li><b>10 sessions, 10 Monday-morning actions.</b> Implement in your first clinical week.</li><li><b>Launch+ adds virtual hands-on.</b> Typodont reps in your own office, scan feedback from faculty, then a live 30-minute timed prep.</li><li><b>Measured, every 30 days.</b> The 90-Day Scorecard tracks production per hour, case acceptance and comprehensive exams.</li></ul>
+      <div class="lt-tiers"><span><b>2-Day Launch</b> ${money(L.offers.core.price)}</span><span class="is-plus"><b>Launch+</b> ${money(L.offers.plus.price)} <small>Flagship</small></span><small class="lt-tn">Target list prices. Cohort pricing for groups.</small></div>
       <div class="endcta"><a class="btn btn-orange" href="#/launch">See the 2-day agenda</a><a class="btn btn-line" href="#/step/1">Build my growth plan</a></div></div>
     <div class="lt-days">${L.days.map(d=>`<div class="lt-day"><div class="lt-dh"><span>${esc(d.n)}</span><b>${esc(d.t)}</b><small>${esc(d.src)}</small></div><ol>${d.sessions.map(x=>`<li>${esc(x.t)}</li>`).join("")}</ol></div>`).join("")}
       <div class="lt-mon"><span class="mm-badge">Monday morning</span>${esc(L.days[0].sessions[0].mon)}</div></div>
@@ -244,14 +251,18 @@ const RS_CITIES = [
   { k: "toronto", n: "Toronto", lab: "t" },
   { k: "nynj", n: "NY / NJ", lab: "r" },
   { k: "charlotte", n: "Charlotte", lab: "r" },
-  { k: "dallas", n: "Dallas", lab: "b" },
+  { k: "dallas", n: "Dallas", lab: "b", first: true },
   { k: "florida", n: "Florida", lab: "r" }
 ];
 const RS_LONDON = { k: "london", n: "London, UK" };
+const RS_FIRST = { when: "Early February 2027", what: "First Launch+ cohort", note: "dates TBD" };
+// Dallas first, then the other proposed markets, then London and the home campus.
+const RS_ORDER = () => [...RS_CITIES.filter(c=>c.first), ...RS_CITIES.filter(c=>!c.home && !c.first)];
 const RS_FLY = "Come to them. Fits their week. More doctors in. Measured lift and fast payback. Results sell the next city.";
 function rsInfo(c){
   return c.home
     ? `<b>Scottsdale, AZ</b><span class="rs-pk">Home campus</span><span>Launch cohort: [dates TBD]</span>`
+    : c.first ? `<b>${esc(c.n)}</b><span class="rs-pk">First stop · ${esc(RS_FIRST.what)}</span><span>${esc(RS_FIRST.when)} (${esc(RS_FIRST.note)})</span>`
     : `<b>${esc(c.n)}</b><span class="rs-pk">Proposed 2027 market</span><span>Launch cohort: [dates TBD]</span>`;
 }
 function rsBase(M){
@@ -259,7 +270,7 @@ function rsBase(M){
 }
 function rsMapSVG(cls){
   const M = window.SGA_MAP; if (!M) return "";
-  return `<svg class="${cls}" viewBox="0 0 ${M.W} ${M.H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of North America showing the Spear home campus in Scottsdale and proposed 2027 Roadshow markets">${rsBase(M)}${RS_CITIES.map(c=>{ const [x,y]=M.cities[c.k]; return c.home?`<circle class="rs-dot-home" cx="${x}" cy="${y}" r="9"/>`:`<circle class="rs-dot-ring" cx="${x}" cy="${y}" r="8"/>`; }).join("")}</svg>`;
+  return `<svg class="${cls}" viewBox="0 0 ${M.W} ${M.H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of North America showing the Spear home campus in Scottsdale and proposed 2027 Roadshow markets">${rsBase(M)}${RS_CITIES.map(c=>{ const [x,y]=M.cities[c.k]; return c.home?`<circle class="rs-dot-home" cx="${x}" cy="${y}" r="9"/>`:c.first?`<circle class="rs-dot-first" cx="${x}" cy="${y}" r="11"/>`:`<circle class="rs-dot-ring" cx="${x}" cy="${y}" r="8"/>`; }).join("")}</svg>`;
 }
 const RS_BLURB = {
   scottsdale: "Where the pathway leads. Campus workshops, membership and the next level of mastery.",
@@ -267,20 +278,20 @@ const RS_BLURB = {
   toronto: "First Canadian cohort.",
   nynj: "Dense metro with large group footprints.",
   charlotte: "Southeast hub, for growing multi-location groups.",
-  dallas: "Fast-growing DSO corridor in Texas.",
+  dallas: "First stop. Fast-growing DSO corridor in Texas.",
   florida: "High-growth Sun Belt market.",
   london: "Proof the Launch travels."
 };
 function roadshowSection(){
   const M = window.SGA_MAP; if (!M) return "";
   const pin = c => { const [x,y] = M.cities[c.k];
-    return `<button type="button" class="rs-pin ${c.home?"rs-home":"rs-mkt"} rs-l-${c.lab}" style="left:${(x/M.W*100).toFixed(2)}%;top:${(y/M.H*100).toFixed(2)}%" data-rs="${c.k}" aria-label="${esc(c.n)}: ${c.home?"home campus":"proposed 2027 market"}. Launch cohort: dates to be announced"><span class="rs-dot" aria-hidden="true"></span><span class="rs-lab">${esc(c.n)}</span></button>`; };
+    return `<button type="button" class="rs-pin ${c.home?"rs-home":"rs-mkt"}${c.first?" rs-first":""} rs-l-${c.lab}" style="left:${(x/M.W*100).toFixed(2)}%;top:${(y/M.H*100).toFixed(2)}%" data-rs="${c.k}" aria-label="${esc(c.n)}: ${c.home?"home campus. Launch cohort: dates to be announced":c.first?"first stop. "+RS_FIRST.what+", "+RS_FIRST.when+", "+RS_FIRST.note:"proposed 2027 market. Launch cohort: dates to be announced"}"><span class="rs-dot" aria-hidden="true"></span><span class="rs-lab">${esc(c.n)}${c.first?`<em>First stop</em>`:""}</span></button>`; };
   const U = M.uk;
-  const card = c => `<button type="button" class="rs-city ${c.home?"is-home":""}" data-rs="${c.k}"><span class="rs-pk2">${c.home?"Home campus":"Proposed 2027 market"}</span><b>${esc(c.n)}</b><span class="muted">${esc(RS_BLURB[c.k]||"")}</span><span class="rs-coh">Cohort dates TBD</span></button>`;
+  const card = c => `<button type="button" class="rs-city ${c.home?"is-home":""}${c.first?" is-first":""}" data-rs="${c.k}"><span class="rs-pk2">${c.home?"Home campus":c.first?"First stop · 2027":"Proposed 2027 market"}</span><b>${esc(c.n)}</b><span class="muted">${esc(RS_BLURB[c.k]||"")}</span><span class="rs-coh">${c.first?`${esc(RS_FIRST.when)}. First Launch+ cohort, ${esc(RS_FIRST.note)}.`:"Cohort dates TBD"}</span></button>`;
   return `<section class="rs-sec rs-sec-x" id="roadshow"><div class="rs-xwrap">
     <div class="rs-mapcard rs-mapcard-x">
-      <div class="rs-mh"><div><span class="rs-k">The 2027 Roadshow map</span><b class="rs-mt">Seven proposed markets. One home campus.</b></div>
-        <div class="rs-legend"><span><i class="lg-home"></i>Home campus</span><span><i class="lg-ring"></i>Proposed 2027 market</span></div></div>
+      <div class="rs-mh"><div><span class="rs-k">The 2027 Roadshow map</span><b class="rs-mt">First stop: Dallas, early February 2027. Six more proposed markets. One home campus.</b></div>
+        <div class="rs-legend"><span><i class="lg-first"></i>First stop</span><span><i class="lg-home"></i>Home campus</span><span><i class="lg-ring"></i>Proposed 2027 market</span></div></div>
       <div class="rs-mapx">
         <div class="rs-map" id="rsMap">${rsMapSVG("rs-svg")}${RS_CITIES.map(pin).join("")}<div class="rs-pop" id="rsPop" role="status" aria-live="polite" hidden></div></div>
         <button type="button" class="rs-uk" data-rs="london" aria-label="London, UK: proposed 2027 market. Launch cohort: dates to be announced">
@@ -288,11 +299,11 @@ function roadshowSection(){
           <span class="rs-ukt"><span class="rs-k">Across the pond</span><b>London, UK</b><span class="muted">Proposed 2027 market. Proof the Launch travels.</span><span class="rs-coh" id="rsUkCoh">Launch cohort: [dates TBD]</span></span>
         </button>
       </div>
-      <div class="rs-list" role="list">${[...RS_CITIES, RS_LONDON].map(c=>`<button type="button" role="listitem" class="rs-chip ${c.home?"is-home":""}" data-rs="${c.k}"><i></i>${esc(c.n)}</button>`).join("")}</div>
-      <p class="hint rs-note"><span class="tag tag-ph">Proposed</span> Concept for discussion. Cities and dates not confirmed.</p>
+      <div class="rs-list" role="list">${[RS_CITIES[0], ...RS_ORDER(), RS_LONDON].map(c=>`<button type="button" role="listitem" class="rs-chip ${c.home?"is-home":""}${c.first?" is-first":""}" data-rs="${c.k}"><i></i>${esc(c.n)}${c.first?" · First stop":""}</button>`).join("")}</div>
+      <p class="hint rs-note"><span class="tag tag-ph">Proposed</span> Concept for discussion. Cities and dates not confirmed. Dallas is the target first stop, early February 2027 (dates TBD). Other cities proposed.</p>
     </div>
   </div>
-  <div class="wrap"><div class="rs-cities" id="rs-cities">${[...RS_CITIES.filter(c=>!c.home), RS_LONDON, RS_CITIES[0]].map(card).join("")}</div></div>
+  <div class="wrap"><div class="rs-cities" id="rs-cities">${[...RS_ORDER(), RS_LONDON, RS_CITIES[0]].map(card).join("")}</div></div>
   </section>`;
 }
 const FLY = [
@@ -321,15 +332,15 @@ function roadshowPage(){
   document.title = "Spear Enterprise. Relaunched. The 2027 Roadshow | Spear Growth Accelerator (concept)";
   const E = launchEcon(S.A.dsoLaunchLift);
   const PIL = [
-    [SVG('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'), "In-market 2-Day Launch cohorts", "The flagship Launch, Foundations plus Treatment Planning with Confidence, delivered in your market to a cohort of your doctors."],
+    [SVG('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>'), "In-market Launch+ cohorts", "Two days in your market, Foundations plus Treatment Planning with Confidence, then virtual hands-on reps, a live timed prep and a 6-month study club."],
     [ICON.team, "Legendary faculty plus near-peer co-leads", "Every session is co-led: a senior Spear faculty member for the why, a near-peer co-lead for how it runs on Monday."],
-    [SVG('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'), "30/60/90 implementation and cohort scorecard", "Virtual check-ins at 30, 60 and 90 days, with each cohort measured in % lift against its own baseline."],
+    [SVG('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'), "The 90-Day Scorecard, rolled up", "Baseline, then day 30, 60 and 90 on production per hour, case acceptance and comprehensive exams. One cohort view for the group."],
     [SVG('<path d="M3 12h13"/><path d="M12 6l6 6-6 6"/><path d="M21 4v16"/>'), "A pathway into campus and membership", "The Roadshow starts the pathway. Campus workshops in Scottsdale and membership are where it leads, so the campus becomes the destination the pathway sells."]
   ];
   const HOW = [
-    ["Pick a market", "Choose the proposed 2027 city closest to your doctors."],
+    ["Pick a market", "Start in Dallas in early February 2027, or choose the proposed city closest to your doctors."],
     ["Enroll a cohort", "New and early-career associates start together, on one clinical language."],
-    ["Launch", "Two days in market. Every session ends with a Monday-morning action and one number to track."],
+    ["Launch+", "Two days in market, then typodont reps with scan feedback and a live timed prep. Every session ends with a Monday-morning action."],
     ["90-day readout", "Your cohort scorecard: % lift, time to payback and implementation by doctor."],
     ["Next city", "Use the readout to roll the next cohort into your next market."]
   ];
@@ -339,13 +350,13 @@ function roadshowPage(){
     <h1>Spear Enterprise. Relaunched.<span class="ent-h1b">The 2027 Roadshow.</span></h1>
     <p class="ent-lead">Spear comes to your doctors. The enterprise offer for DSOs and multi-location groups is rebuilt around the 2-Day Launch, delivered in your market, cohort by cohort, with measured lift and fast payback.</p>
     <div class="ent-stats">
-      <div><b>7</b><span>proposed 2027 markets plus the Scottsdale home campus</span></div>
-      <div><b>2 days</b><span>in your market, built to fit a practice week</span></div>
-      <div><b>30/60/90</b><span>cohort scorecard after every Launch</span></div>
+      <div><b>Dallas</b><span>first stop: early February 2027, first Launch+ cohort (dates TBD)</span></div>
+      <div><b>6 more</b><span>proposed 2027 markets plus the Scottsdale home campus</span></div>
+      <div><b>30/60/90</b><span>90-Day Scorecard for every cohort</span></div>
       <div><b id="rsPb">${E.pb ? "Month "+E.pb : "12+ mo"}</b><span>illustrative payback per associate</span></div>
     </div>
     <div class="endcta"><button class="btn btn-orange" data-jump="rs-form">Bring the Roadshow to your doctors</button><button class="btn btn-ghost" data-jump="roadshow">See the cities</button></div>
-    <p class="ent-hnote">Concept for discussion. Cities and dates not confirmed.</p>
+    <p class="ent-hnote">Concept for discussion. Dallas targeted for early February 2027, dates TBD. Other cities proposed, not confirmed.</p>
   </div></section>
   ${roadshowSection()}
   <section class="section ent-sec" id="rs-why"><div class="wrap">
@@ -377,8 +388,8 @@ function roadshowPage(){
       <label>Organization<input type="text" name="org" placeholder="Your DSO or group" autocomplete="off"></label>
       <label>Your role<select name="role"><option>Clinical leader</option><option>Operations or training leader</option><option>Executive</option><option>Practice owner, multi-location</option></select></label>
       <div class="ent-f2"><label>Doctors to enroll<input type="number" name="docs" min="1" placeholder="12"></label>
-        <label>Preferred market<select name="mkt">${[...RS_CITIES.filter(c=>!c.home), RS_LONDON].map(c=>`<option>${esc(c.n)}</option>`).join("")}<option>Scottsdale home campus</option><option>Not sure yet</option></select></label></div>
-      <label>Timing<select name="when"><option>First half of 2027</option><option>Second half of 2027</option><option>Exploring</option></select></label>
+        <label>Preferred market<select name="mkt">${[...RS_ORDER(), RS_LONDON].map(c=>`<option>${esc(c.n)}${c.first?" (first stop, early Feb 2027)":""}</option>`).join("")}<option>Scottsdale home campus</option><option>Not sure yet</option></select></label></div>
+      <label>Timing<select name="when"><option>Early February 2027 (Dallas cohort)</option><option>First half of 2027</option><option>Second half of 2027</option><option>Exploring</option></select></label>
       <button class="btn btn-orange" type="submit">Request a Roadshow cohort</button>
       <p class="ent-fmsg" id="rsMsg" role="status" aria-live="polite" hidden>Thanks. This is a concept prototype, so nothing was sent. In the live version, a Spear Enterprise advisor would follow up.</p>
     </form>
@@ -393,17 +404,17 @@ function roadshowTeaser(){
     <div class="ent-copy"><span class="eyebrow ent-eyebrow"><span class="ent-new">New for 2027</span> Spear Enterprise</span>
       <h2>Spear Enterprise. Relaunched. <span class="ent-h-sub">The 2027 Roadshow.</span></h2>
       <p>Spear comes to your doctors. The enterprise offer for DSOs and multi-location groups is rebuilt around the 2-Day Launch, delivered in your market as a cohort, with measured lift and fast payback.</p>
-      <ul class="ent-pts"><li>In-market 2-Day Launch cohorts</li><li>Legendary faculty plus near-peer co-leads</li><li>30/60/90 cohort scorecard</li></ul>
+      <ul class="ent-pts"><li>First stop: Dallas, early February 2027</li><li>In-market Launch+ cohorts with virtual hands-on</li><li>Legendary faculty plus near-peer co-leads</li><li>90-Day Scorecard for every cohort</li></ul>
       <span class="ent-go">See the 2027 Roadshow <span aria-hidden="true">&rarr;</span></span>
-      <span class="ent-note">Proposed markets. Concept for discussion. Cities and dates not confirmed.</span></div>
+      <span class="ent-note">Concept for discussion. Dallas dates TBD. Other cities proposed, not confirmed.</span></div>
     <div class="ent-map"><div class="rs-tmap">${rsMapSVG("rs-svg")}</div>
-      <div class="ent-cities">${[...RS_CITIES.filter(c=>!c.home), RS_LONDON].map(c=>`<span>${esc(c.n)}</span>`).join("")}<span class="is-home">Scottsdale home campus</span></div></div>
+      <div class="ent-cities">${[...RS_ORDER(), RS_LONDON].map(c=>`<span class="${c.first?"is-first":""}">${esc(c.n)}${c.first?" · First stop, Feb 2027":""}</span>`).join("")}<span class="is-home">Scottsdale home campus</span></div></div>
   </a></div></section>`;
 }
 function rsCallout(where){
   const t = where === "dso"
-    ? ["For DSOs and groups", "Spear Enterprise is relaunching with the 2027 Roadshow", "Bring the 2-Day Launch to your market as a cohort: in-market delivery, a 30/60/90 scorecard and payback measured in months."]
-    : ["Spear Enterprise 2027", "This Launch is coming to your market", "The 2027 Roadshow takes the 2-Day Launch on the road for DSOs and multi-location groups. Proposed markets: Chicago, Toronto, NY / NJ, Charlotte, Dallas, Florida and London, UK."];
+    ? ["For DSOs and groups", "Spear Enterprise is relaunching with the 2027 Roadshow", "Bring Launch+ to your market as a cohort: in-market delivery, virtual hands-on reps, a 90-Day Scorecard and payback measured in months. First stop: Dallas, early February 2027."]
+    : ["Spear Enterprise 2027", "This Launch is coming to your market", "The 2027 Roadshow takes Launch+ on the road for DSOs and multi-location groups. First stop: Dallas, early February 2027 (dates TBD). Proposed next: Chicago, Toronto, NY / NJ, Charlotte, Florida and London, UK."];
   return `<a class="rs-callout${where==="dso"?" rs-callout-dso":""}" href="#/roadshow"><span class="rs-ci" aria-hidden="true">${SVG('<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>')}</span>
     <span class="rs-ct"><span class="rs-k">${t[0]}</span><b>${t[1]}</b><span>${t[2]}</span></span><span class="rs-cgo">See the Roadshow <span aria-hidden="true">&rarr;</span></span></a>`;
 }
@@ -435,17 +446,56 @@ function bindRoadshow(root){
 }
 /* Launch-only economics for one associate. Same model, headroom curve and editable assumptions as the plan page.
    Baseline = the "Avg associate production per day" slider (default $2,500). Shown as %, months, ROI and annual or cohort totals, never a $/day result. */
-const LCALC = { lift: null, cohort: 12, base: null };
-function launchEcon(lift, base){
+const LCALC = { lift: null, cohort: 12, base: null, tier: "plus" };
+function launchEcon(lift, base, tier){
   const A = S.A, days = 4, H = 24; base = base || LCALC.base || DEFAULT_DAY; const mb = base*days*A.weeks/12;
+  tier = tierKey(tier || LCALC.tier); const price = offer(tier).price; lift = tierLift(lift, tier, A);
   const HM = headroom(base, A), rs = [], raw = [];
   pushRamps(rs, raw, HM, A, 1 + A.lagMonths, 1 + A.lagMonths, lift);
   const lv = m => cappedLift(rs, raw, m, HM);
   const mem = D.tiers.foundations.annual/12; let cc=0, cs=0, cp=0; const ms=[];
-  for (let m=1; m<=H; m++){ const l = lv(m); cp += mb*l; cc += mb*l*A.margin; cs += mem + (m===1 ? D.launch.price + A.travel + (A.includeChairDays ? 2*base*A.margin : 0) : 0); ms.push({ m, l, cp, cc, cs }); }
+  for (let m=1; m<=H; m++){ const l = lv(m); cp += mb*l; cc += mb*l*A.margin; cs += mem + (m===1 ? price + A.travel + (A.includeChairDays ? 2*base*A.margin : 0) : 0); ms.push({ m, l, cp, cc, cs }); }
   const y1 = ms.slice(0, 12), pb = y1.find(x => x.cc >= x.cs), five = y1.find(x => x.l >= 0.05 - 1e-9);
-  return { m3: ms[2].l, m6: ms[5].l, m12: ms[11].l, roi: (ms[11].cc - ms[11].cs)/ms[11].cs, pb: pb ? pb.m : null, five: five ? five.m : null,
+  return { tier, price, ls: ms.map(x => x.l), m3: ms[2].l, m6: ms[5].l, m12: ms[11].l, roi: (ms[11].cc - ms[11].cs)/ms[11].cs, pb: pb ? pb.m : null, five: five ? five.m : null,
     base, k: HM.k, prod12: ms[11].cp, contrib12: ms[11].cc, prod24: ms[23].cp, contrib24: ms[23].cc };
+}
+function pricingCards(){
+  const card = o => `<article class="pc ${o.flagship?"pc-plus":""}" data-tier="${o.k}">
+      ${o.flagship?`<span class="pc-flag">Flagship · Recommended</span>`:""}
+      <h3>${esc(o.name)}</h3><p class="pc-tag">${esc(o.tagline)}</p>
+      <div class="pc-price">${money(o.price)}<small>per doctor · target list price</small></div>
+      <ul class="pc-inc">${o.inc.map((x,i)=>`<li class="${o.flagship&&i===0?"pc-all":""}">${esc(x)}</li>`).join("")}</ul>
+      <a class="btn ${o.flagship?"btn-orange":"btn-line"}" href="#/step/1" data-set-tier="${o.k}">${o.flagship?"Build my plan with Launch+":"Start with the 2 days"}</a></article>`;
+  return `<section class="pricing" id="pricing"><div class="pr-head"><span class="eyebrow" style="color:var(--blue)">Two ways in</span><h2>Pick your Launch</h2>
+      <p class="muted">Same 2 days. Launch+ adds the reps, the coaching and the measurement that make it stick.</p></div>
+    <div class="pc-grid">${card(L.offers.core)}${card(L.offers.plus)}</div>
+    <div class="pc-foot"><span class="pc-dso"><b>Cohort pricing for groups.</b> DSOs and multi-location groups enroll as a cohort.</span><span class="hint"><span class="tag tag-ph">Concept</span> Target list prices for discussion. Not published.</span></div></section>`;
+}
+function handsOnSection(){
+  const H = L.handsOn;
+  return `<section class="ho" id="hands-on"><div class="ho-head"><span class="eyebrow">Inside Launch+ · Virtual hands-on restorative track</span>
+      <h2>Reps in your own office. <mark>Feedback from Spear faculty.</mark></h2>
+      <p>No extra days out of the chair. Practice on a typodont when it fits your schedule, get graded on every scan, then prove it live against the clock.</p></div>
+    <ol class="ho-tl">${H.steps.map((x,i)=>`<li class="ho-step ho-s${i+1}"><span class="ho-dot" aria-hidden="true">${i+1}</span><span class="ho-w">${esc(x.w)}</span><b>${esc(x.t)}</b><span class="ho-h">${esc(x.h)}</span><p>${esc(x.s)}</p>${i===1?`<span class="ho-q2">${esc(H.roadmap)}</span>`:""}</li>`).join("")}</ol>
+    <div class="ho-road"><span class="ho-rtag">${esc(H.roadmap)}</span><span>${esc(H.roadmapS)}</span></div>
+    <div class="ho-det">${H.details.map(d=>`<div><b>${esc(d[0])}</b><span>${esc(d[1])}</span></div>`).join("")}</div>
+    <p class="ho-note"><span class="tag tag-ph">Concept</span> Built on the design from Spear clinical leadership: practice on your own time first, then one live timed prep. To be piloted before launch.</p></section>`;
+}
+function scorecardSection(){
+  const C = L.scorecard, E = launchEcon(S.A.dsoLaunchLift, DEFAULT_DAY, "plus"), pph = DEFAULT_DAY/8;
+  const cell = (r, i) => {
+    if (r.calc === "pph") return !i ? `<b>${money(pph)}</b><small>an hour</small>` : E.ls[i-1] < 0.005 ? `<b>Ramp</b><small>starting</small>` : `<b>+${pct(E.ls[i-1],0)}</b><small>vs baseline</small>`;
+    const v = r.base*(1 + r.lift*i/3);
+    return `<b>${r.fmt === "pct" ? pct(v,0) : (Math.round(v*10)/10).toString()}</b>${i?`<small>+${pct(r.lift*i/3,0)}</small>`:""}`; };
+  return `<section class="sc" id="scorecard"><div class="sc-grid">
+    <div class="sc-main"><span class="eyebrow" style="color:var(--blue)">Included in Launch+ · Measurement</span><h2>The 90-Day Scorecard</h2>
+      <p class="muted">Three numbers, measured against each doctor's own baseline. Logged before the Launch, then read out at day 30, 60 and 90 with your near-peer co-lead. We report what moved and what did not.</p>
+      <div class="sc-tw"><table class="sc-t"><thead><tr><th>Metric</th>${C.cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
+        <tbody>${C.rows.map(r=>`<tr><th>${esc(r.k)}</th>${C.cols.map((_,i)=>`<td>${cell(r,i)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <p class="hint" style="text-align:left"><span class="tag tag-assume">Illustrative</span> Sample doctor at ${money(DEFAULT_DAY)} a day, 8 clinical hours. Production per hour follows the same model as the rest of this site. Acceptance and exam baselines are examples.</p></div>
+    <div class="sc-dso"><span class="eyebrow">For DSOs · Cohort rollup</span><h3>One view of the whole cohort</h3>
+      <ul>${C.dso.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  </div></section>`;
 }
 function launchPage(){
   document.title = COURSE_FULL + " | Spear Growth Accelerator (concept)";
@@ -461,25 +511,28 @@ function launchPage(){
     ${growthMotif("plan")}<span class="eyebrow">Flagship · Step 1 in every Growth Accelerator plan</span>
     ${courseH("h1")}
     <p class="lh-lead">A loading dose for early-career dentists (0 to 5 years) and DSO clinicians. Day 1 is Spear Foundations. Day 2 is Treatment Planning with Confidence. Every session ends with one Monday-morning action and one number to track, so the course shows up in your first clinical week, not someday.</p>
-    <div class="chips"><span class="chip">2 days, hands-on</span><span class="chip">For 0 to 5 years and DSO clinicians</span><span class="chip">10 sessions · 10 Monday-morning actions</span><span class="chip">Monday Morning Kit</span><span class="chip">30/60/90 cohort follow-up</span></div>
-    <div class="endcta"><a class="btn btn-orange" href="#/step/1">Build my growth plan</a><button class="btn btn-ghost" data-jump="launch-dso">For DSOs: ROI and payback</button></div>
+    <div class="chips"><span class="chip">2 days, live role-play</span><span class="chip">For 0 to 5 years and DSO clinicians</span><span class="chip">10 sessions · 10 Monday-morning actions</span><span class="chip">Monday Morning Kit</span><span class="chip">Launch+ adds virtual hands-on, 30/60/90 coaching and a study club</span></div>
+    <div class="endcta"><a class="btn btn-orange" href="#/step/1">Build my growth plan</a><button class="btn btn-ghost" data-jump="pricing">Compare Launch and Launch+</button><button class="btn btn-ghost" data-jump="launch-dso">For DSOs: ROI and payback</button></div>
   </div></section>
   <div class="wrap">
     <div class="kpis">${L.targets.map(x=>`<div class="kpi"><small>${esc(x.k)}</small><div class="v">${esc(x.calc ? "+"+pct(launchEcon(S.A.dsoLaunchLift, DEFAULT_DAY)[x.calc],0) : x.v)}</div><div class="d">${esc(x.s)}</div></div>`).join("")}
       <div class="kpi hl"><small>Monday-morning actions</small><div class="v">${SESS().length}</div><div class="d">One per session, done in week 1</div></div></div>
-    <p class="hint" style="text-align:left;margin-top:10px"><span class="tag tag-assume">Illustrative 90-day targets</span> Shown as % lift vs each doctor's own baseline. Spear must validate with cohort data before publishing.</p>
+    <p class="hint" style="text-align:left;margin-top:10px"><span class="tag tag-assume">Illustrative 90-day targets</span> Launch+, shown as % lift vs each doctor's own baseline. Targets, not results. Spear must validate with cohort data before publishing.</p>
+    ${pricingCards()}
 
-    <section class="agenda" id="agenda">${L.days.map(d=>`<div class="day"><div class="day-h"><span class="day-n">${esc(d.n)}</span><div><h2>${esc(d.t)}</h2><span class="muted">${esc(d.src)}</span></div></div><div class="sess-list">${sess(d)}</div></div>`).join("")}</section>
+    <section class="agenda" id="agenda">${L.days.map(d=>`<div class="day" id="agenda-${d.n.replace(/\s+/g,"").toLowerCase()}"><div class="day-h"><span class="day-n">${esc(d.n)}</span><div><h2>${esc(d.t)}</h2><span class="muted">${esc(d.src)}</span></div></div><div class="sess-list">${sess(d)}</div></div>`).join("")}</section>
+    ${handsOnSection()}
+    ${scorecardSection()}
   </div>
   ${facultyModel(false)}
   <div class="wrap rs-callwrap">${rsCallout("launch")}</div>
   <div class="wrap">
     <div class="two kit-two">
-      <div class="panel"><span class="eyebrow" style="color:var(--blue)">Take it home</span><h2 style="margin-top:0">The Monday Morning Kit</h2><p class="muted" style="margin-top:0">Everything you need to run week 1 without rebuilding it yourself.</p>
+      <div class="panel"><span class="eyebrow" style="color:var(--blue)">Take it home · Both tiers</span><h2 style="margin-top:0">The Monday Morning Kit</h2><p class="muted" style="margin-top:0">Everything you need to run week 1 without rebuilding it yourself.</p>
         <ul class="kit">${L.kit.map(k=>`<li><span class="kit-ic">✓</span><span>${esc(k[0])}</span><span class="kit-t kit-${k[1].toLowerCase()}">${esc(k[1])}</span></li>`).join("")}</ul>
         <p class="hint" style="text-align:left"><span class="tag tag-ph">Concept</span> Kit contents to be built with faculty.</p></div>
-      <div class="panel"><span class="eyebrow" style="color:var(--blue)">After the course</span><h2 style="margin-top:0">30/60/90 follow-up</h2><p class="muted" style="margin-top:0">Virtual check-ins with your cohort and near-peer co-lead keep the gains from fading.</p>
-        <ol class="tl">${L.followup.map(f=>`<li><span class="tl-d">${esc(f.d)}</span><div><b>${esc(f.t)}</b><p class="muted">${esc(f.s)}</p></div></li>`).join("")}</ol></div>
+      <div class="panel"><span class="eyebrow" style="color:var(--blue)">After the course</span><h2 style="margin-top:0">30/60/90 coaching</h2><p class="muted" style="margin-top:0">Virtual check-ins with your cohort and near-peer co-lead keep the gains from fading. Every Launch includes day 30. Launch+ adds day 60 and day 90.</p>
+        <ol class="tl">${L.followup.map(f=>`<li><span class="tl-d">${esc(f.d)}</span><div><b>${esc(f.t)}</b> <span class="lt-badge ${f.tier==="plus"?"is-plus":""}">${f.tier==="plus"?"Launch+":"Both tiers"}</span><p class="muted">${esc(f.s)}</p></div></li>`).join("")}</ol></div>
     </div>
 
     <div class="panel dso launch-dso" id="launch-dso"><div class="panel-head"><div><span class="eyebrow" style="color:var(--blue)">For DSOs</span><h2 style="margin:0">Onboard every new associate as a cohort</h2>
@@ -491,22 +544,24 @@ function launchPage(){
       ${rsCallout("dso")}
     </div>
 
-    <div class="panel" style="text-align:center;background:linear-gradient(135deg,#fff,#eef2ff)"><h2>Start with the Launch. Build from there.</h2><p class="muted">Every Growth Accelerator plan puts this course in step 1, then sequences the workshops that fit your goals.</p>
+    <div class="panel" style="text-align:center;background:linear-gradient(135deg,#fff,#eef2ff)"><h2>Start with Launch+. Build from there.</h2><p class="muted">Every Growth Accelerator plan puts the Launch in step 1, then sequences the workshops that fit your goals. Launch+ is the default. You can pick the 2 days alone.</p>
       <div class="endcta" style="justify-content:center"><a class="btn btn-orange" href="#/step/1">Build my growth plan</a><a class="btn btn-line" href="https://www.speareducation.com/request-information/" target="_blank" rel="noopener">Talk to a Spear advisor</a></div></div>
   </div>`;
   bindLcalc();
   bindRoadshow(app);
   app.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => document.getElementById(b.dataset.jump).scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" }));
+  app.querySelectorAll("[data-set-tier]").forEach(a => a.addEventListener("click", () => { S.launchTier = tierKey(a.dataset.setTier); save(); }));
 }
 function lcalcHtml(){
   if (LCALC.lift === null) LCALC.lift = S.A.dsoLaunchLift;
   if (!LCALC.base) LCALC.base = DEFAULT_DAY;
   return `<div class="lcalc"><div class="lc-in">
+          <div class="lc-tier"><span>Program per associate</span><div class="toggle" role="radiogroup" aria-label="Program"><button type="button" role="radio" data-lct="plus" class="${LCALC.tier==="plus"?"on":""}" aria-checked="${LCALC.tier==="plus"}">Launch+ ${money(L.offers.plus.price)}</button><button type="button" role="radio" data-lct="core" class="${LCALC.tier==="core"?"on":""}" aria-checked="${LCALC.tier==="core"}">2-Day Launch ${money(L.offers.core.price)}</button></div></div>
           <label for="lcB">Avg associate production per day <b id="lcBv">${money(LCALC.base)}</b></label><input id="lcB" class="range" type="range" min="1000" max="8000" step="250" value="${LCALC.base}">
           <label for="lcC">Associates in the cohort <b id="lcCv">${LCALC.cohort}</b></label><input id="lcC" class="range" type="range" min="4" max="40" step="1" value="${LCALC.cohort}">
-          <label for="lcL">2-Day Launch lift at full effect, at $5,000 a day <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.05" max="0.4" step="0.005" value="${LCALC.lift}">
+          <label for="lcL">Launch+ lift at full effect, at $5,000 a day <b id="lcLv">${pct(LCALC.lift)}</b></label><input id="lcL" class="range" type="range" min="0.05" max="0.4" step="0.005" value="${LCALC.lift}">
           <p class="hint lc-eff" id="lcEff" style="text-align:left;margin:-4px 0 10px"></p>
-          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp (shorter for lower producers), ${pct(S.A.margin,0)} margin. Headroom effect from the plan page applies to the production you set. Default lift is set so an associate at $2,500 a day reaches the same month-6 % as the Typical plan on the home page. Cost per associate: placeholder tuition, travel, 2 chair days out and Foundations Membership (published). Enterprise pricing is not published.</p></div>
+          <p class="hint" style="text-align:left">Illustrative. Same model as the plan page: ${S.A.lagMonths}-month lag, ${S.A.rampMonths}-month ramp (shorter for lower producers), ${pct(S.A.margin,0)} margin. Headroom effect from the plan page applies to the production you set. Default lift is set so an associate at $2,500 a day reaches the same month-6 % as the Typical plan on the home page. The 2-Day Launch alone is modeled at ${pct(S.A.launchCoreShare,0)} of the Launch+ lift. Cost per associate: target list tuition for the program you pick, travel, 2 chair days out and Foundations Membership (published). Cohort pricing for groups.</p></div>
         <div class="lc-out" id="lcOut"></div></div>`;
 }
 function bindLcalc(){
@@ -518,12 +573,15 @@ function bindLcalc(){
         <div class="d">${c} associates. Per associate: <b>+${money(E.prod12)}</b>. Contribution to the DSO at ${pct(S.A.margin,0)} margin: <b>+${money(E.contrib12*c)}</b>.</div>
         <div class="d lc-24">First 24 months, if gains hold: <b>+${money(E.prod24*c)}</b> production, <b>+${money(E.contrib24*c)}</b> contribution.</div></div>
       <div class="kpi hl"><small>Payback</small><div class="v">${E.pb ? "Month "+E.pb : "After 12"}</div><div class="d">Per associate, and for the cohort</div></div>
-      <div class="kpi"><small>12-month ROI</small><div class="v">${pct(E.roi,0)}</div><div class="d">Contribution vs launch cost</div></div>
+      <div class="kpi"><small>12-month ROI</small><div class="v">${pct(E.roi,0)}</div><div class="d">Contribution vs ${esc(offer(E.tier).name)} cost (${money(E.price)} list)</div></div>
       <div class="kpi"><small>Production per hour</small><div class="v">+${pct(E.m6)}</div><div class="d">by month 6 · +${pct(E.m3)} by month 3</div></div>
       <div class="kpi"><small>Time to +5%</small><div class="v">${E.five ? "Month "+E.five : "Not in 12 mo"}</div><div class="d">${c} associates on one clinical language</div></div>`; };
   $("#lcC").oninput = e => { LCALC.cohort = +e.target.value; out(); };
   $("#lcB").oninput = e => { LCALC.base = +e.target.value; out(); const st = $("#rsPb"); if (st) { const E = launchEcon(LCALC.lift, LCALC.base); st.textContent = E.pb ? "Month "+E.pb : "12+ mo"; } };
   $("#lcL").oninput = e => { LCALC.lift = +e.target.value; out(); };
+  document.querySelectorAll("[data-lct]").forEach(b => b.onclick = () => { LCALC.tier = tierKey(b.dataset.lct);
+    document.querySelectorAll("[data-lct]").forEach(x => { const on = x.dataset.lct === LCALC.tier; x.classList.toggle("on", on); x.setAttribute("aria-checked", on); });
+    out(); const st = $("#rsPb"); if (st) { const E = launchEcon(LCALC.lift, LCALC.base); st.textContent = E.pb ? "Month "+E.pb : "12+ mo"; } });
   out();
 }
 
@@ -718,7 +776,7 @@ function buildPlan(){
   const A = S.A, B = S.block, H = A.horizon, nBlocks = Math.ceil(H/B);
   const queue = [];
   // Step 1 in every plan: the flagship 2-Day Launch (Foundations + Treatment Planning with Confidence).
-  queue.push({ w: LAUNCH_W, area: null, launch: true, lift: A.launchLift, why: isEarly() ? "Your loading dose: exam, diagnosis, sequencing and case acceptance in 2 days, with a Monday-morning action for every session" : "Everyone starts here: one clinical language for exam, planning and case acceptance, implemented on Monday morning" });
+  queue.push({ w: LAUNCH_W, area: null, launch: true, tier: launchTier(), lift: tierLift(A.launchLift, launchTier(), A), why: isEarly() ? "Your loading dose: exam, diagnosis, sequencing and case acceptance in 2 days, with a Monday-morning action for every session" : "Everyone starts here: one clinical language for exam, planning and case acceptance, implemented on Monday morning" });
   const master = S.master.length ? S.master : ["tp"];
   master.forEach(id => { const a = AREA[id];
     if (id === "tp") { // Launch Day 2 covers Treatment Planning with Confidence; go straight to the next step.
@@ -742,7 +800,7 @@ function buildPlan(){
 }
 function chooseTier(items){
   const A=S.A, years=A.horizon/12;
-  const tuition = it => it.launch ? D.launch.price : it.w === D.foundationsWorkshop ? D.foundationsWorkshop.price : (it.w.d === 2 ? A.tuition2 : A.tuition3);
+  const tuition = it => it.launch ? offer(it.tier).price : it.w === D.foundationsWorkshop ? D.foundationsWorkshop.price : (it.w.d === 2 ? A.tuition2 : A.tuition3);
   const needTeam = S.master.includes("team") || S.role === "owner" && S.hygShare > 0 && S.master.includes("team");
   let keys = isEarly() && S.role !== "owner" && S.role !== "dso" ? ["foundations","individual","practice","faculty","allaccess"] : ["individual","practice","faculty","allaccess"];
   const rows = keys.map(k => { const t = D.tiers[k];
@@ -830,8 +888,9 @@ function planPage(){
   const y1spend = R.y1.cs, y1c = R.y1.cc, roi = y1spend ? (y1c - y1spend)/y1spend : 0;
   const blocks = [...Array(R.plan.nBlocks)].map((_,b)=>({ b, from: b*R.plan.B+1, to: Math.min(R.plan.H,(b+1)*R.plan.B), items: R.plan.items.filter(i=>i.block===b) }));
   const summitMonth = 6; // plan starts Nov 2026; April 2027 is month 6
-  const rxWorkshop = it => { if (it.launch) { const list = R.tier.tuition(it), net = list*(1-t.t.discount);
-      return `<div class="rxi rxi-launch"><span class="t ws launch">Step 1</span><div><div class="n">${esc(it.w.n)}</div><div class="m">2-day flagship launch · month ${it.month} · Day 1 Spear Foundations + Day 2 Treatment Planning with Confidence · ${esc(it.why)}. Monday Morning Kit and 30/60/90 cohort follow-up included. <a href="#/launch">See the 2-day agenda</a></div></div>
+  const rxWorkshop = it => { if (it.launch) { const list = R.tier.tuition(it), net = list*(1-t.t.discount), o = offer(it.tier), plus = o.k === "plus";
+      return `<div class="rxi rxi-launch"><span class="t ws launch">Step 1</span><div><div class="n">${esc(it.w.n)} <span class="lt-badge ${plus?"is-plus":""}">${esc(o.name)}</span></div><div class="m">${plus?"Flagship":"2 days only"} · month ${it.month} · Day 1 Spear Foundations + Day 2 Treatment Planning with Confidence · ${esc(it.why)}. ${plus?"Includes the virtual hands-on restorative track (typodont shipped to your office, scan feedback, live timed prep assessment), 30/60/90 coaching and the 90-Day Scorecard, and a 6-month study club.":"Includes the Monday Morning Kit and a 30-day check-in. No hands-on track."} <a href="#/launch">Compare the two</a></div>
+        <div class="lt-pick" role="radiogroup" aria-label="Choose your Launch"><button type="button" role="radio" data-lt="plus" aria-checked="${plus}" class="${plus?"on":""}">Launch+ <small>${money(L.offers.plus.price)}</small></button><button type="button" role="radio" data-lt="core" aria-checked="${!plus}" class="${!plus?"on":""}">2-Day Launch only <small>${money(L.offers.core.price)}</small></button></div></div>
       <div class="c">${t.t.unlimited ? "Included" : money(net)}<small>list ${money(list)} target price${!t.t.unlimited && t.t.discount ? " · "+pct(t.t.discount,0)+" member discount" : ""}</small></div></div>`; }
     const real = it.w === D.foundationsWorkshop; const list = R.tier.tuition(it); const net = list*(1-t.t.discount);
     return `<div class="rxi"><span class="t ws">Workshop</span><div><div class="n">${esc(it.w.n)}</div><div class="m">${it.w.d}-day ${esc(it.w.cat)} workshop · month ${it.month}${real?` · ${D.foundationsWorkshop.ce} CE`:""} · ${esc(it.why)}</div></div>
@@ -959,6 +1018,7 @@ function drawerHtml(){
     <div class="fld"><label>Membership billing</label><select data-a="billing"><option value="monthly" ${A.billing==="monthly"?"selected":""}>Spread monthly</option><option value="annual" ${A.billing==="annual"?"selected":""}>Annual upfront</option></select></div>
     ${f("horizon","Horizon (months)","12 to 36",1)}
     <h4>Tuition <span class="tag tag-ph">placeholder</span></h4>
+    <p class="hint" style="text-align:left;margin:0 0 8px">Launch tuition (target list): Launch+ ${money(L.offers.plus.price)}, 2-Day Launch only ${money(L.offers.core.price)}. Pick the tier on step 1 of your plan.</p>
     ${f("tuition2","2-day workshop list price ($)","Default mirrors the published Foundations price",50)}
     ${f("tuition3","3-day workshop list price ($)","Not yet published by Spear",50)}
     <h4>Timing <span class="tag tag-assume">illustrative</span></h4>
@@ -967,8 +1027,9 @@ function drawerHtml(){
     ${f("onlineHeadStart","Share of gain from online prep %","Starts the month before the workshop",1,100)}
     <h4>Lift at full effect, % of doctor production <span class="tag tag-assume">illustrative</span></h4>
     ${D.areas.map(a=>`<div class="fld"><label>${a.label}</label><input data-lift="${a.id}" type="number" step="0.5" value="${+(A.lifts[a.id]*100).toFixed(2)}"></div>`).join("")}
-    ${f("launchLift","2-Day Launch (step 1 in every plan)","At $5,000/day. Foundations + Treatment Planning with Confidence",0.5,100)}
-    ${f("dsoLaunchLift","2-Day Launch, DSO cohort snapshot default","Launch-only economics on the 2-Day Launch and Roadshow pages",0.5,100)}
+    ${f("launchLift","Launch+ (step 1 in every plan)","At $5,000/day. The 2 days plus the hands-on track, coaching and study club",0.5,100)}
+    ${f("launchCoreShare","2-Day Launch only, % of the Launch+ lift","No hands-on track, 30-day check-in only",5,100)}
+    ${f("dsoLaunchLift","Launch+, DSO cohort snapshot default","Launch-only economics on the 2-Day Launch and Roadshow pages",0.5,100)}
     ${f("capstoneLift","Advanced Treatment Planning capstone","",0.5,100)}
     ${f("secondWsShare","Second workshop in same area, % of first","",5,100)}
     ${f("hygLift","Hygiene lift from team training %","Applies to hygiene production",0.5,100)}
@@ -993,6 +1054,7 @@ function bindPlan(){
   $("#emailme").onclick=()=>toast("Prototype: no email is collected. In production this would save the plan.");
   $("#shareRx").onclick=shareRx; $("#printRx").onclick=()=>window.print();
   app.querySelectorAll("[data-vn]").forEach(b=>b.onclick=()=>{ S.vsNothing = b.dataset.vn==="1"; save(); rerender(); });
+  app.querySelectorAll("[data-lt]").forEach(b=>b.onclick=()=>{ S.launchTier = tierKey(b.dataset.lt); save(); rerender(); toast((S.launchTier==="plus"?"Launch+":"2-Day Launch only")+": tuition, ROI and payback updated."); });
   const onA = e => { const el=e.target; let v=el.value;
     if (el.dataset.lift) { S.A.lifts[el.dataset.lift]=(parseFloat(v)||0)/100; }
     else if (el.dataset.a) { const k=el.dataset.a;
@@ -1041,7 +1103,7 @@ function encodeState(){
     else if (S.A[k] !== f.A[k]) a[k] = S.A[k];
   });
   return b64e(JSON.stringify({ v:1, r:S.role, me:S.metric, va:S.value, h:S.hours, d:S.days, hy:S.hygShare, t:S.target, y:S.years, l:S.love, ma:S.master, p:S.pace, b:S.block,
-    ds:[S.dso.doctors, S.dso.locations, S.dso.adoption], sd:S.showDso?1:0, vn:S.vsNothing?1:0, a }));
+    ds:[S.dso.doctors, S.dso.locations, S.dso.adoption], sd:S.showDso?1:0, vn:S.vsNothing?1:0, lt: launchTier()==="core" ? "core" : undefined, a }));
 }
 function applyShare(code){
   try {
@@ -1051,7 +1113,7 @@ function applyShare(code){
     const n = Object.assign(f, { role:o.r, roleVia:"card", metric: o.me === "hour" ? "hour" : "day", value: String(num(o.va, 0)), hours: num(o.h, 8), days: num(o.d, 4),
       hygShare: Math.min(0.5, Math.max(0, num(o.hy, 0.3))), target: num(o.t, null), years: ["0-2","3-5","6-10","11-20","20+"].includes(o.y) ? o.y : null,
       love: ids(o.l), master: ids(o.ma).slice(0,3), pace: [0.5,1,2].includes(o.p) ? o.p : 1, block: o.b === 6 ? 6 : 4,
-      showDso: !!o.sd, vsNothing: o.vn !== 0 });
+      showDso: !!o.sd, vsNothing: o.vn !== 0, launchTier: tierKey(o.lt) });
     if (Array.isArray(o.ds)) n.dso = { doctors: Math.max(1, num(o.ds[0], 25)), locations: Math.max(1, num(o.ds[1], 10)), adoption: Math.min(1, Math.max(0, num(o.ds[2], 0.8))) };
     const a = o.a || {};
     Object.keys(a).forEach(k => {
@@ -1076,7 +1138,7 @@ function rxPrintHtml(R, blocks){
   const t = R.tier.best, H = R.plan.H, d = R.d, last = R.last, m12 = R.y1, dso = S.showDso ? dsoCalc(R) : null;
   const today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const wsLine = it => { const real = it.w === D.foundationsWorkshop, list = R.tier.tuition(it), net = list*(1-t.t.discount);
-    return `<tr><td>${it.launch?"<b>Step 1:</b> ":""}${esc(it.w.n)}<small>${it.launch?"2-day flagship launch: Foundations + Treatment Planning with Confidence, 30/60/90 follow-up":it.w.d+"-day workshop"} · month ${it.month}</small></td><td>${t.t.unlimited ? "Included" : money(net)}<small>${real ? "published price" : "placeholder list price"}${!t.t.unlimited && t.t.discount ? ", less "+pct(t.t.discount,0)+" member discount" : ""}</small></td></tr>`; };
+    return `<tr><td>${it.launch?"<b>Step 1:</b> ":""}${esc(it.w.n)}<small>${it.launch?(offer(it.tier).k==="plus"?"Launch+: 2 days (Foundations + Treatment Planning with Confidence), virtual hands-on track with timed prep assessment, 30/60/90 coaching and scorecard, 6-month study club":"2-Day Launch only: Foundations + Treatment Planning with Confidence, Monday Morning Kit, 30-day check-in"):it.w.d+"-day workshop"} · month ${it.month}</small></td><td>${t.t.unlimited ? "Included" : money(net)}<small>${real ? "published price" : it.launch ? "target list price" : "placeholder list price"}${!t.t.unlimited && t.t.discount ? ", less "+pct(t.t.discount,0)+" member discount" : ""}</small></td></tr>`; };
   return `<div class="rxp">
     <header class="rxp-h"><img src="assets/spear-growth-accelerator-logo.png" alt="Spear Growth Accelerator" width="1505" height="495"><div class="rxp-sym"><span>&#8478;</span><div><b>Growth prescription</b><small>${esc(today)} · ${esc(ROLE[S.role])}</small></div></div></header>
     <div class="rxp-grid">
@@ -1165,6 +1227,6 @@ window.addEventListener("hashchange", render);
 document.addEventListener("click", e => { const a = e.target.closest && e.target.closest('a[href^="#/"]'); if (a && a.getAttribute("href") === location.hash) { e.preventDefault(); render(); } });
 document.addEventListener("keydown", e => { if (e.key === "Enter" && /#\/step/.test(location.hash) && !e.target.matches("button")) { e.preventDefault(); next(); } });
 // Read-only hook for automated checks of the shared model.
-window.SGA_MODEL = { typicalRun, headroom: (b, a) => headroom(b, Object.assign({}, fresh().A, a || {})), launchEcon: (l, b) => launchEcon(l == null ? S.A.dsoLaunchLift : l, b) };
+window.SGA_MODEL = { typicalRun, headroom: (b, a) => headroom(b, Object.assign({}, fresh().A, a || {})), launchEcon: (l, b, t) => launchEcon(l == null ? S.A.dsoLaunchLift : l, b, t || "plus"), offers: L.offers };
 render();
 })();

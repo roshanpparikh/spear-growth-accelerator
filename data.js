@@ -32,7 +32,42 @@ window.SP_DATA = {
   // FLAGSHIP 2-DAY LAUNCH (concept). Combines Spear Foundations (Day 1) + Treatment Planning with Confidence (Day 2).
   // Everything here is a concept for discussion. Faculty are roles, not people. Targets are illustrative.
   launch: {
-    d: 2, cat: "Flagship launch", price: 4995, // target list price for the 2-Day Launch
+    d: 2, cat: "Flagship launch",
+    // TWO TIERS (concept target list prices, Oct 2026). "plus" is the flagship and the default everywhere.
+    offers: {
+      core: { k: "core", name: "2-Day Launch", price: 2495, tagline: "The 2 days, on their own.",
+        inc: ["2 live days: exam, diagnosis, planning and the money conversation", "Monday Morning Kit", "30-day virtual check-in"] },
+      plus: { k: "plus", name: "Launch+", price: 4995, flagship: true, tagline: "The 2 days, then 6 months of reps, coaching and measurement.",
+        inc: ["Everything in the 2-Day Launch", "Virtual hands-on restorative track: typodont shipped to your office, scan feedback from faculty, live timed prep assessment", "30/60/90 coaching and the 90-Day Scorecard", "6-month study club with your cohort"] }
+    },
+    // VIRTUAL HANDS-ON TRACK (inside Launch+). Design follows Dr. Dan Butterman's Oct 1, 2026 plan: practice on your own time
+    // with scan-based faculty feedback, then one live, proctored 30-minute timed prep. Concept; not yet piloted.
+    handsOn: {
+      steps: [
+        { w: "Launch", t: "2 days", h: "Start together", s: "The 2-Day Launch. Your typodont ships to your office in the launch phase, so reps start the week you get home." },
+        { w: "Weeks 1 to 4", t: "Typodont reps + scan feedback", h: "Practice on your own time", s: "Prep at lunch or after hours. Scan each prep and upload it. Faculty grade it against a master-faculty ideal prep and a clinically acceptable bar, and send you a 1 to 2 minute video. Missed it? Prep it again." },
+        { w: "Month 2", t: "Timed prep assessment", h: "Game time", s: "Book a slot. Prep live on camera with faculty watching. 30 minutes, hard stop. A perfect prep at 31 minutes does not pass." },
+        { w: "Months 1 to 6", t: "Study club", h: "Make it stick", s: "Monthly sessions with your cohort and near-peer co-lead. Real cases, real numbers." }
+      ],
+      details: [
+        ["Scan, not photos", "Upload an STL from your intraoral scanner. No scanner? A phone scanning app works."],
+        ["Measured to a tenth of a millimeter", "A color reduction map shows where you under or over reduced, down to the distance from the opposing tooth."],
+        ["Two bars", "How close to the ideal prep, and the one that matters most: would this give a good result at the lab or chairside, yes or no?"],
+        ["Your progress reel", "Your first prep, every round of feedback and your timed prep, overlaid. See how much better you got in 30 minutes than with all the time in the world."]
+      ],
+      roadmap: "Q2 2027: manikin upgrade",
+      roadmapS: "Moving to full patient-simulation manikins by Q2 2027. Doctors tell us typodonts are too easy and don't simulate patient care."
+    },
+    // 90-DAY SCORECARD: measurement, not a promise. Sample values are illustrative.
+    scorecard: {
+      cols: ["Baseline", "Day 30", "Day 60", "Day 90"],
+      rows: [
+        { k: "Production per hour", calc: "pph" },
+        { k: "Case acceptance %", base: 0.45, lift: 0.15, fmt: "pct" },
+        { k: "Comprehensive exams per week", base: 8, lift: 0.25, fmt: "num" }
+      ],
+      dso: ["Every associate's scorecard rolls up to one cohort view", "Median and range on all 3 numbers, vs each doctor's own baseline", "Reps completed and timed prep assessment results", "Early flags for anyone who needs more help, at day 30, not month 12"]
+    },
     days: [
       { n: "Day 1", t: "See it, then say it", src: "Built on Spear Foundations", sessions: [
         { t: "The comprehensive exam", what: "A repeatable exam flow that finds what single-tooth dentistry misses.", mon: "Run the full comprehensive exam on every new patient this week, checklist in hand.", kpi: "Comprehensive exams per week" },
@@ -44,8 +79,8 @@ window.SP_DATA = {
       { n: "Day 2", t: "Plan it, present it, close it", src: "Built on Treatment Planning with Confidence", sessions: [
         { t: "Sequencing that holds up", what: "Disease control first, then foundation, then function and esthetics. In that order, every time.", mon: "Re-sequence 2 of your open treatment plans with the sequencing template.", kpi: "% of plans with a documented sequence" },
         { t: "Phased plans patients can say yes to", what: "Break big cases into phases that fit the patient's time, budget and priorities.", mon: "Offer every major case in 2 or 3 phases, with phase 1 ready to schedule today.", kpi: "Case acceptance % on multi-phase plans" },
-        { t: "Presenting the plan (extended block, live role-play)", what: "A sit-down consult structure that turns findings into decisions. Each doctor presents a real case to a mock patient and gets coached on words, pacing and silence.", mon: "Run one sit-down consult away from the chair using the presentation template.", kpi: "Case acceptance %" },
-        { t: "Case acceptance and objections (extended block, live role-play)", what: "Handle \u201clet me think about it,\u201d \u201cis insurance covering this?\u201d and \u201cthat's a lot\u201d without discounting or pressure. Practice every objection out loud.", mon: "Call every unscheduled plan within 48 hours using the follow-up script.", kpi: "% of unscheduled treatment recovered" },
+        { t: "Presenting the plan and handling objections (extended block, live role-play)", what: "A sit-down consult that turns findings into decisions. Each doctor presents a real case to a mock patient, then handles \u201clet me think about it\u201d without pressure. Coached on words, pacing and silence.", mon: "Run one sit-down consult away from the chair, then call every unscheduled plan within 48 hours.", kpi: "Case acceptance %" },
+        { t: "The money conversation (live role-play)", what: "Present fees, phasing, financing and insurance questions with confidence. No discounting. Practice \u201cis insurance covering this?\u201d and \u201cthat's a lot\u201d out loud until the fee is just part of the plan.", mon: "Present every major case with the fee, a phased option and a financing option, using the fee script.", kpi: "% of major cases presented with a fee and financing option" },
         { t: "Your 90-day production plan", what: "Set your baseline, pick three numbers, commit to the first week.", mon: "Log your baseline: production per hour, case acceptance %, exams per week.", kpi: "Production per hour, % lift vs baseline" }
       ]}
     ],
@@ -58,13 +93,13 @@ window.SP_DATA = {
     kit: [
       ["Comprehensive exam checklist", "Checklist"], ["10-minute smartphone photo series", "Checklist"], ["Chairside confidence phrases (and words to drop)", "Script"],
       ["2-minute occlusal and esthetic screen", "Checklist"], ["Findings conversation script", "Script"], ["Sequencing template", "Template"],
-      ["Phased plan template", "Template"], ["Sit-down consult presentation", "Template"], ["Objection handling scripts plus 48-hour follow-up", "Script"],
+      ["Phased plan template", "Template"], ["Sit-down consult presentation", "Template"], ["Objection handling scripts plus 48-hour follow-up", "Script"], ["Fee presentation and financing scripts", "Script"],
       ["90-day scorecard: baseline plus 3 numbers", "Template"]
     ],
     followup: [
-      { d: "Day 30", t: "Virtual cohort check-in", s: "60 minutes on video. Report your 3 numbers, troubleshoot with your near-peer co-lead, lock in the next fix." },
-      { d: "Day 60", t: "Case review", s: "Each doctor presents one case planned and presented with the method. Feedback from the cohort and faculty." },
-      { d: "Day 90", t: "Results readout", s: "% lift vs your baseline on all 3 numbers. Graduate into the next workshop in your plan. DSOs get a cohort scorecard." }
+      { d: "Day 30", tier: "both", t: "Virtual cohort check-in", s: "60 minutes on video. Report your 3 numbers, troubleshoot with your near-peer co-lead, lock in the next fix." },
+      { d: "Day 60", tier: "plus", t: "Case review", s: "Each doctor presents one case planned and presented with the method. Feedback from the cohort and faculty." },
+      { d: "Day 90", tier: "plus", t: "Results readout", s: "% lift vs your baseline on all 3 numbers. Graduate into the next workshop in your plan. DSOs get a cohort scorecard." }
     ]
   },
   foundationsWorkshop: { n: "Foundations", d: 2, cat: "Spear Technique", price: 3995, real: true, ce: 14 },
@@ -105,7 +140,9 @@ window.SP_DATA = {
     // DSO cohort snapshot default (Launch only, one associate): set so an associate's month-6 lift at $2,500/day matches the
     // Typical plan's month-6 headline at the same production (about +28%). Conservative vs the full doctor-only Launch lift.
     dsoLaunchLift: 0.18,
+    // 2-Day Launch alone (no hands-on track, 30-day check-in only): share of the Launch+ lift. Illustrative, editable.
+    launchCoreShare: 0.75,
     // Headroom effect: lower starting production means more room to grow. Multiplies every lift % (see headroom() in app.js).
-    headroom: true, headroomStrength: 1, liftCap: 0.55, modelV: 3
+    headroom: true, headroomStrength: 1, liftCap: 0.55, modelV: 4
   }
 };
