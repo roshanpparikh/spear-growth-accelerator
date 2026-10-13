@@ -36,9 +36,9 @@ window.SP_DATA = {
     // TWO TIERS (concept target list prices, Oct 2026). "plus" is the flagship and the default everywhere.
     offers: {
       core: { k: "core", name: "2-Day Launch", price: 2495, tagline: "The 2 days, on their own.",
-        inc: ["2 live days: exam, diagnosis, planning and the money conversation", "Monday Morning Kit", "30-day virtual check-in"] },
-      plus: { k: "plus", name: "Launch+ Hands-On", price: 4995, flagship: true, tagline: "The 2 days, then 6 months of reps, coaching and measurement.",
-        inc: ["Everything in the 2-Day Launch", "Virtual hands-on restorative track: typodont shipped to your office, scan feedback from faculty, live timed prep assessment", "30/60/90 coaching and the 90-Day Scorecard", "6-month study club with your cohort"] }
+        inc: ["2 live days", "Monday Morning Kit", "30-day virtual check-in"] },
+      plus: { k: "plus", name: "Launch+ Hands-On", price: 4995, flagship: true, tagline: "The 2 days, plus 6 months of reps.",
+        inc: ["Everything in the 2-Day Launch", "Virtual hands-on reps + live timed prep", "30/60/90 coaching + 90-Day Scorecard", "6-month study club"] }
     },
     // VIRTUAL HANDS-ON TRACK (inside Launch+). Design follows Dr. Dan Butterman's Oct 1, 2026 plan: practice on your own time
     // with scan-based faculty feedback, then one live, proctored 30-minute timed prep. Concept; not yet piloted.
@@ -71,16 +71,16 @@ window.SP_DATA = {
     days: [
       { n: "Day 1", t: "See it, then say it", src: "Built on Spear Foundations", sessions: [
         { t: "The comprehensive exam", what: "A repeatable exam flow that finds what single-tooth dentistry misses.", mon: "Run the full comprehensive exam on every new patient this week, checklist in hand.", kpi: "Comprehensive exams per week" },
-        { t: "Fast records and face-first diagnosis (short block)", what: "A 10-minute smartphone photo series plus scans, then sort findings into esthetics, function, structure, biology. Enough to see it and show it, no studio required.", mon: "Take the phone photo series on your first 3 new patients and sort findings into the four categories.", kpi: "% of new patients with complete records" },
+        { t: "Fast records and face-first diagnosis", what: "A 10-minute smartphone photo series plus scans, then sort findings into esthetics, function, structure, biology. Enough to see it and show it, no studio required.", mon: "Take the phone photo series on your first 3 new patients and sort findings into the four categories.", kpi: "% of new patients with complete records" },
         { t: "Occlusion and esthetic fundamentals", what: "Spot wear, instability and esthetic risk early, before they become failures.", mon: "Add a 2-minute occlusal and esthetic screen to every adult exam.", kpi: "% of adult exams with a documented screen" },
-        { t: "Communicating findings (extended block, live role-play)", what: "Co-discovery: patients walk through their own photos and own the problem. Practice the words in pairs until they sound like you.", mon: "Review photos chairside with every new patient using the findings script.", kpi: "% of patients who book the next visit before leaving" },
+        { t: "Communicating findings", what: "Co-discovery: patients walk through their own photos and own the problem. Practice the words in pairs until they sound like you.", mon: "Review photos chairside with every new patient using the findings script.", kpi: "% of patients who book the next visit before leaving" },
         { t: "Chairside confidence", what: "Say what you see, recommend what you would do for your own family, and stop apologizing for the fee. Reps with your near-peer co-lead, filmed and debriefed.", mon: "Make one clear recommendation per new patient, in one sentence, with no hedging words.", kpi: "% of new patients given a clear recommendation" }
       ]},
       { n: "Day 2", t: "Plan it, present it, close it", src: "Built on Treatment Planning with Confidence", sessions: [
         { t: "Sequencing that holds up", what: "Disease control first, then foundation, then function and esthetics. In that order, every time.", mon: "Re-sequence 2 of your open treatment plans with the sequencing template.", kpi: "% of plans with a documented sequence" },
         { t: "Phased plans patients can say yes to", what: "Break big cases into phases that fit the patient's time, budget and priorities.", mon: "Offer every major case in 2 or 3 phases, with phase 1 ready to schedule today.", kpi: "Case acceptance % on multi-phase plans" },
-        { t: "Presenting the plan and handling objections (extended block, live role-play)", what: "A sit-down consult that turns findings into decisions. Each doctor presents a real case to a mock patient, then handles \u201clet me think about it\u201d without pressure. Coached on words, pacing and silence.", mon: "Run one sit-down consult away from the chair, then call every unscheduled plan within 48 hours.", kpi: "Case acceptance %" },
-        { t: "The money conversation (live role-play)", what: "Present fees, phasing, financing and insurance questions with confidence. No discounting. Practice \u201cis insurance covering this?\u201d and \u201cthat's a lot\u201d out loud until the fee is just part of the plan.", mon: "Present every major case with the fee, a phased option and a financing option, using the fee script.", kpi: "% of major cases presented with a fee and financing option" },
+        { t: "Presenting the plan and handling objections", what: "A sit-down consult that turns findings into decisions. Each doctor presents a real case to a mock patient, then handles \u201clet me think about it\u201d without pressure. Coached on words, pacing and silence.", mon: "Run one sit-down consult away from the chair, then call every unscheduled plan within 48 hours.", kpi: "Case acceptance %" },
+        { t: "The money conversation", what: "Present fees, phasing, financing and insurance questions with confidence. No discounting. Practice \u201cis insurance covering this?\u201d and \u201cthat's a lot\u201d out loud until the fee is just part of the plan.", mon: "Present every major case with the fee, a phased option and a financing option, using the fee script.", kpi: "% of major cases presented with a fee and financing option" },
         { t: "Your 90-day production plan", what: "Set your baseline, pick three numbers, commit to the first week.", mon: "Log your baseline: production per hour, case acceptance %, exams per week.", kpi: "Production per hour, % lift vs baseline" }
       ]}
     ],
