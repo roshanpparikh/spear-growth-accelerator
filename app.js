@@ -120,7 +120,7 @@ function landing() {
     <h2>How it works</h2>
     <div class="how">
       <div class="card"><div class="num">1</div><h3>Set your baseline</h3><p>Production, days, goal.</p></div>
-      <div class="card"><div class="num">2</div><h3>Choose your growth areas</h3><p>Implants, aligners, cosmetic and more.</p></div>
+      <div class="card"><div class="num">2</div><h3>Choose your growth areas</h3><p>Implants, restorative, cosmetic and more.</p></div>
       <div class="card"><div class="num">3</div><h3>Get your growth plan</h3><p>Launch first, then workshops. See your payback month.</p></div>
     </div>
   </div></section>
@@ -170,7 +170,7 @@ function bindCalc(){
     if (CALC.g === "typ") {
       $("#calcY").textContent = "+"+money(T.perYear); $("#calcYl").textContent = "a year by month "+T.H;
       $("#calcM").textContent = "+"+money(T.cum); $("#calcMl").textContent = "added over "+T.H+" months";
-      $("#calcNote").innerHTML = `<b>Typical plan (illustrative): +${pct(T.lift)} by month ${T.H}.</b> Computed live from the same model and default assumptions as the plan page, for a practice owner 4 days a week who starts with the 2-Day Launch, then adds implants, case acceptance and clear aligners. Growth builds over ${T.H} months as workshops ramp in. It is not instant. Headroom effect at ${money(CALC.v)}/day: ${T.k.toFixed(2)}x the lift at $5,000/day. Most of the early gain comes from the 2-Day Launch, so you reach about ${money(Math.round(CALC.v*(1+T.m6)/50)*50)}/day (+${pct(T.m6)}) by month 6, then growth keeps building more slowly.`;
+      $("#calcNote").innerHTML = `<b>Typical plan (illustrative): +${pct(T.lift)} by month ${T.H}.</b> Computed live from the same model and default assumptions as the plan page, for a practice owner 4 days a week who starts with the 2-Day Launch, then adds implants, case acceptance and restorative. Growth builds over ${T.H} months as workshops ramp in. It is not instant. Headroom effect at ${money(CALC.v)}/day: ${T.k.toFixed(2)}x the lift at $5,000/day. Most of the early gain comes from the 2-Day Launch, so you reach about ${money(Math.round(CALC.v*(1+T.m6)/50)*50)}/day (+${pct(T.m6)}) by month 6, then growth keeps building more slowly.`;
     } else {
       const g = +CALC.g, tgt = Math.round(CALC.v*(1+g)/50)*50, yr = (tgt - CALC.v)*days*weeks;
       $("#calcY").textContent = "+"+money(yr); $("#calcYl").textContent = "a year once you reach it";
